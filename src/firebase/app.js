@@ -2,7 +2,7 @@ import firebase from "firebase/app";
 // import {initializeApp } from 'firebase/app';
 import 'firebase/functions';
 // import 'firebase/auth';
-// import 'firebase/firestore';
+import 'firebase/firestore';
 // import 'firebase/storage';
 
 const config = {
@@ -19,6 +19,6 @@ console.log(config);
 export const App = firebase.initializeApp(config);
 
 // export const AUTH = App.auth();
-// export const DB = App.firestore();
+export const DB = App.firestore();
 // export const STORAGE = App.storage();
 export const FUNCTIONS = App.functions("southamerica-east1");
