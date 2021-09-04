@@ -1,26 +1,44 @@
 <template>
-  <div class="hello">
-    <li v-for="participant in participants" :key="participant.RegistrationId">
-      {{ participant.RegisteredName }}
-    </li>
+  <div class="participants">
+    <Participant
+      v-for="participant in participants"
+      :key="participant.RegistrationId"
+      :companyName="participant.RegisteredName"
+      :authorizationServers="participant.AuthorisationServers"
+      @click.native="participantDetails(participant)"
+    />
   </div>
 </template>
 
 <script>
 import { FUNCTIONS } from "../firebase/app";
+import Participant from "@/components/Participant.vue";
 import json from "../constants/participants.json";
 export default {
   name: "ListParticipants",
+  components: {
+    Participant,
+  },
   data() {
     return {
       json: json,
-      participants: [],
+      // participants: [],
+      participants: json
     };
   },
   created() {
-    this.getParticipants();
+    // this.getParticipants();
   },
   methods: {
+    participantDetails(participant){
+      this.$router.push({
+        name:"Participant",
+        params:{
+          propParticipantId: participant.RegistrationId,
+          propParticipant: participant
+        }
+      })
+    },
     async getParticipants() {
       const getParticipants = FUNCTIONS.httpsCallable("getParticipants");
       await getParticipants().then((result) => {
@@ -31,7 +49,6 @@ export default {
     fetchList() {
       const updatePage = FUNCTIONS.httpsCallable("updateParticipants");
       updatePage(
-        // "https://api.itau/open-banking/products-services/v1/personal-accounts"
         { data: this.json }
       ).then((result) => {
         console.log(result.data);
@@ -56,5 +73,9 @@ li {
 }
 a {
   color: #42b983;
+}
+.participants{
+  display: flex;
+  flex-wrap: wrap;
 }
 </style>
