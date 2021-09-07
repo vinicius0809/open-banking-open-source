@@ -5,23 +5,29 @@
     <strong> API Resources:</strong>
     {{ authorizationServer.ApiResources.length }}
     <div class="api-resources">
-      <ul
+      <button
         v-for="apiResource in authorizationServer.ApiResources"
         :key="apiResource.ApiResourceId"
-        class="api-resource-item"
+        :class="getApiResourceClasses(apiResource.ApiResourceId)"
         @click="showDetails(apiResource)"
       >
-        {{
-          apiResource.ApiFamilyType
-        }}
-        - v{{
-          apiResource.ApiVersion
-        }}
-      </ul>
+        {{ apiResource.ApiFamilyType }}
+        - v{{ apiResource.ApiVersion }}
+      </button>
     </div>
     <hr />
-    <div class="api-resources-details" v-if="showingDetails()">
-      asdasdasdasd
+    <div class="api-resources-details" v-if="showingDetails">
+      <div
+        v-for="discoveryEndpoint in selectedApiResource.ApiDiscoveryEndpoints"
+        :key="discoveryEndpoint.ApiDiscoveryId"
+      >
+        <p v-if="!isPublicEndpoint(discoveryEndpoint.ApiEndpoint)">
+          {{ discoveryEndpoint.ApiEndpoint }}
+        </p>
+        <p v-else>
+          <button>{{ discoveryEndpoint.ApiEndpoint }}</button>
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -46,12 +52,24 @@ export default {
   methods: {
     showDetails(apiResource) {
       this.isShowingDetails = true;
-      console.log(apiResource);
+      this.selectedApiResource = apiResource;
+    },
+    isPublicEndpoint(endpoint) {
+      return (
+        endpoint.indexOf("products-services") > -1 ||
+        endpoint.indexOf("channels") > -1
+      );
+    },
+    getApiResourceClasses(resourceId) {
+      const selectedClass =
+        resourceId == this.selectedApiResource.ApiResourceId ? " selected" : "";
+      return "api-resource-item" + selectedClass;
     },
   },
   data() {
     return {
       isShowingDetails: false,
+      selectedApiResource: {},
     };
   },
 };
@@ -71,6 +89,7 @@ export default {
   padding: 5px;
   margin: 10px;
 }
+.selected,
 .api-resource-item:hover {
   cursor: pointer;
   background-color: darkgray;
