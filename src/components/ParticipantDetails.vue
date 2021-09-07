@@ -8,6 +8,7 @@
         v-for="authorizationServer in participant.AuthorisationServers"
         :key="authorizationServer.AuthorisationServerId"
         :authorizationServer="authorizationServer"
+        @click.native="authorizationServerDetails(authorizationServer)"
       />
     </div>
   </div>
@@ -23,8 +24,21 @@ export default {
   components: {
     AuthorizationServer,
   },
+  methods:{
+authorizationServerDetails(authorizationServer){
+      this.$router.push({
+        name:"AuthorizationServer",
+        params:{
+          propParticipantId: this.participantId,
+          propAuthorizationServerId: authorizationServer.AuthorisationServerId,
+          propAuthorizationServer: authorizationServer
+        }
+      })
+    }
+  },
   data() {
-    return {};
+    return {
+    };
   },
 };
 </script>

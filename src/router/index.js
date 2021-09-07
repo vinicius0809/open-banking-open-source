@@ -22,6 +22,11 @@ const routes = [
     path: '/participant/:propParticipantId?',
     name: 'Participant',
     component: () => import('../views/ParticipantDetails.vue')
+  },
+  {
+    path: '/participant/:propParticipantId?/authorizationServer/:propAuthorizationServerId?',
+    name: 'AuthorizationServer',
+    component: () => import('../views/AuthorizationServerDetails.vue')
   }
 ]
 

@@ -8,6 +8,9 @@
     <div>
       <strong>{{ authorizationServer.CustomerFriendlyName }}</strong>
     </div>
+    <div>
+      {{ authorizationServer.CustomerFriendlyDescription }}
+    </div>
     <div class="developer-portal">
       <a
         v-if="
@@ -45,7 +48,5 @@ export default {
 .authorization-server:hover {
   cursor: pointer;
   background-color: darkgray;
-}
-.developer-portal {
 }
 </style>
