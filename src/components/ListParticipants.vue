@@ -1,6 +1,10 @@
 <template>
   <div class="participants">
+    <div v-if="loading" class="loading">
+      <img src="../assets/loading.svg" alt="Carregando..." />
+    </div>
     <Participant
+      v-else
       v-for="participant in participants"
       :key="participant.RegistrationId"
       :companyName="participant.RegisteredName"
@@ -21,36 +25,37 @@ export default {
   },
   data() {
     return {
-      json: json,
-      // participants: [],
-      participants: json
+      json,
+      loading: true,
+      participants: [],
+      //participants: json
     };
   },
   created() {
-    // this.getParticipants();
+    this.getParticipants();
   },
   methods: {
-    participantDetails(participant){
+    participantDetails(participant) {
       this.$router.push({
-        name:"Participant",
-        params:{
+        name: "Participant",
+        params: {
           propParticipantId: participant.RegistrationId,
-          propParticipant: participant
-        }
-      })
+          propParticipant: participant,
+        },
+      });
     },
     async getParticipants() {
+      this.loading = true;
       const getParticipants = FUNCTIONS.httpsCallable("getParticipants");
       await getParticipants().then((result) => {
         console.log(result.data);
         this.participants = result.data;
+        this.loading = false;
       });
     },
     fetchList() {
       const updatePage = FUNCTIONS.httpsCallable("updateParticipants");
-      updatePage(
-        { data: this.json }
-      ).then((result) => {
+      updatePage({ data: this.json }).then((result) => {
         console.log(result.data);
       });
     },
@@ -74,8 +79,13 @@ li {
 a {
   color: #42b983;
 }
-.participants{
+.participants {
   display: flex;
   flex-wrap: wrap;
+}
+.loading {
+  width: 200px;
+  flex-grow: 1;
+  align-self: center;
 }
 </style>
