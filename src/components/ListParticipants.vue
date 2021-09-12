@@ -1,10 +1,6 @@
 <template>
   <div class="participants">
-    <div v-if="loading" class="loading">
-      <img src="../assets/loading.svg" alt="Carregando..." />
-    </div>
     <Participant
-      v-else
       v-for="participant in participants"
       :key="participant.RegistrationId"
       :companyName="participant.RegisteredName"
@@ -18,6 +14,7 @@
 import { FUNCTIONS } from "../firebase/app";
 import Participant from "@/components/Participant.vue";
 import json from "../constants/participants.json";
+import { mapActions } from "vuex";
 export default {
   name: "ListParticipants",
   components: {
@@ -26,15 +23,19 @@ export default {
   data() {
     return {
       json,
-      loading: true,
       participants: [],
-      //participants: json
     };
   },
   created() {
     this.getParticipants();
   },
   methods: {
+    orderedByNameParticipants(participants) {
+      return participants.sort(function(a, b) {
+        return a.RegisteredName.localeCompare(b.RegisteredName)
+      });
+    },
+    ...mapActions(["startLoading", "stopLoading"]),
     participantDetails(participant) {
       this.$router.push({
         name: "Participant",
@@ -45,19 +46,15 @@ export default {
       });
     },
     async getParticipants() {
-      this.loading = true;
-      const getParticipants = FUNCTIONS.httpsCallable("getParticipants");
-      await getParticipants().then((result) => {
-        console.log(result.data);
-        this.participants = result.data;
-        this.loading = false;
-      });
-    },
-    fetchList() {
-      const updatePage = FUNCTIONS.httpsCallable("updateParticipants");
-      updatePage({ data: this.json }).then((result) => {
-        console.log(result.data);
-      });
+      this.startLoading();
+      const url =
+        "https://data.directory.openbankingbrasil.org.br/participants";
+      const getUrlData = FUNCTIONS.httpsCallable("getUrlData");
+      await getUrlData({ url })
+        .then((result) => {
+          this.participants = this.orderedByNameParticipants(result.data);
+        })
+        .finally(() => this.stopLoading());
     },
   },
 };
@@ -82,10 +79,5 @@ a {
 .participants {
   display: flex;
   flex-wrap: wrap;
-}
-.loading {
-  width: 200px;
-  flex-grow: 1;
-  align-self: center;
 }
 </style>

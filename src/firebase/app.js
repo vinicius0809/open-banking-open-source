@@ -14,7 +14,6 @@ const config = {
     appId: process.env.VUE_APP_FIREBASE_APP_ID,
     measurementId: process.env.VUE_APP_FIREBASE_MEASUREMENT_ID
 };
-console.log(config);
 
 export const App = firebase.initializeApp(config);
 

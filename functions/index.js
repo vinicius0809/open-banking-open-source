@@ -1,11 +1,29 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const cors = require('cors')({ origin: true });
-// const https = require('https');
+// const cors = require('cors')({ origin: true });
+const axios = require('axios');
 admin.initializeApp();
 const regionFunctions = functions
     .runWith({ timeoutSeconds: 60, memory: "128MB" })
     .region("southamerica-east1").https;
+
+exports.getUrlData = regionFunctions.onCall(async (data) => {
+    let getData = {};
+    // res.set('Access-Control-Allow-Origin', '*');
+    functions.logger.info("Chamando URL: " + data.url);
+    await axios.get(data.url)
+        .then(result => {
+            getData = { message: "sucesso ao buscar", data: result, msgStatus: "success" }
+        })
+        .catch(error => {
+            getData = { message: error.message, msgStatus: "error", data: "sem resposta"}
+        })
+        .finally(() => {
+            functions.logger.info(getData);
+        });
+
+    return getData.data.data;
+});
 
 exports.updateParticipants = regionFunctions.onCall(
     async (data) => {

@@ -4,9 +4,24 @@
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
     </div>
-    <router-view/>
+    <div id="main">
+      <router-view />
+      <img
+        v-if="loading"
+        src="@/assets/loading.svg"
+        alt="Carregando..."
+        width="200px"
+      />
+    </div>
   </div>
 </template>
+
+<script>
+import { mapState } from "vuex";
+export default {
+  computed: mapState(["loading"]),
+};
+</script>
 
 <style>
 #app {
@@ -15,10 +30,16 @@
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  display: grid;
+  grid-template-columns: 0.05fr 1fr 0.05fr;
 }
 
 #nav {
   padding: 30px;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
 }
 
 #nav a {
@@ -28,5 +49,11 @@
 
 #nav a.router-link-exact-active {
   color: #42b983;
+}
+#main {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
 }
 </style>

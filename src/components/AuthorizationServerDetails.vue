@@ -21,12 +21,18 @@
         v-for="discoveryEndpoint in selectedApiResource.ApiDiscoveryEndpoints"
         :key="discoveryEndpoint.ApiDiscoveryId"
       >
-        <p v-if="!isPublicEndpoint(discoveryEndpoint.ApiEndpoint)">
+        <div v-if="!isPublicEndpoint(discoveryEndpoint.ApiEndpoint)">
           {{ discoveryEndpoint.ApiEndpoint }}
-        </p>
-        <p v-else>
-          <button>{{ discoveryEndpoint.ApiEndpoint }}</button>
-        </p>
+        </div>
+        <div v-else>
+          <button
+            v-if="loadingThisData(discoveryEndpoint.ApiEndpoint)"
+            @click="getApiData(discoveryEndpoint.ApiEndpoint)"
+          >
+            {{ discoveryEndpoint.ApiEndpoint }}
+          </button>
+          <DataDetails v-if="shouldShowThisData(discoveryEndpoint.ApiEndpoint)" :urlData="selectedApiData"/>
+        </div>
       </div>
     </div>
   </div>
@@ -34,6 +40,10 @@
 
 <script>
 // import AuthorizationServer from "@/components/AuthorizationServer.vue";
+// import axios from "axios";
+import { FUNCTIONS } from "../firebase/app";
+import { mapActions, mapState } from "vuex";
+import DataDetails from "@/components/DataDetails.vue";
 export default {
   props: {
     participantId: String,
@@ -42,14 +52,26 @@ export default {
     authorizationServer: Object,
   },
   components: {
-    // AuthorizationServer,
+    DataDetails,
   },
   computed: {
+    ...mapState(["loading"]),
     showingDetails() {
       return this.isShowingDetails;
     },
   },
   methods: {
+    loadingThisData(url) {
+      return !this.loading || (this.loading && this.selectedApiDataUrl == url);
+    },
+    shouldShowThisData(url) {
+      return (
+        this.selectedApiData != null &&
+        this.selectedApiData != "undefined" &&
+        this.selectedApiDataUrl == url
+      );
+    },
+    ...mapActions(["startLoading", "stopLoading", "isLoading"]),
     showDetails(apiResource) {
       this.isShowingDetails = true;
       this.selectedApiResource = apiResource;
@@ -65,11 +87,27 @@ export default {
         resourceId == this.selectedApiResource.ApiResourceId ? " selected" : "";
       return "api-resource-item" + selectedClass;
     },
+    getApiData(url) {
+      this.startLoading();
+      console.log("Chamando url: " + url);
+      const getUrlData = FUNCTIONS.httpsCallable("getUrlData");
+      let data = { url };
+      getUrlData(data)
+        .then((response) => {
+          this.selectedApiData = response;
+          this.selectedApiDataUrl = url;
+          console.log(this.selectedApiData);
+        })
+        .catch((error) => console.log(error.message))
+        .finally(() => this.stopLoading());
+    },
   },
   data() {
     return {
       isShowingDetails: false,
       selectedApiResource: {},
+      selectedApiData: {},
+      selectedApiDataUrl: "",
     };
   },
 };
