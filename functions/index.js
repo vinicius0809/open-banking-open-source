@@ -1,10 +1,29 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-// const https = require('https');
+// const cors = require('cors')({ origin: true });
+const axios = require('axios');
 admin.initializeApp();
 const regionFunctions = functions
     .runWith({ timeoutSeconds: 60, memory: "128MB" })
     .region("southamerica-east1").https;
+
+exports.getUrlData = regionFunctions.onCall(async (data) => {
+    let getData = {};
+    // res.set('Access-Control-Allow-Origin', '*');
+    functions.logger.info("Chamando URL: " + data.url);
+    await axios.get(data.url)
+        .then(result => {
+            getData = { message: "sucesso ao buscar", data: result, msgStatus: "success" }
+        })
+        .catch(error => {
+            getData = { message: error.message, msgStatus: "error", data: "sem resposta"}
+        })
+        .finally(() => {
+            functions.logger.info(getData);
+        });
+
+    return getData.data.data;
+});
 
 exports.updateParticipants = regionFunctions.onCall(
     async (data) => {
@@ -46,10 +65,33 @@ exports.updateParticipants = regionFunctions.onCall(
         }
     });
 
-exports.getParticipants = regionFunctions.onCall(async (data) => {
+exports.getParticipants = regionFunctions.onCall(async (data, context) => {
+    functions.logger.info("Chamada recebida => ", data, context);
     const participantsRef = admin.firestore().collection("participants");
+    let participants = [];
+    let message = "Erro ao buscar participantes!"
 
-    
+    await participantsRef
+        .orderBy("insertDate", "desc")
+        .limit(1)
+        .get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                functions.logger.info("Doc.data() =>" + doc.data());
+                participants = doc.data().data;
+            });
+            message = "Sucesso ao obter participantes!"
+        })
+        .catch((error) => {
+            functions.logger.info(error.message);
+            throw new functions.https.HttpsError('unknown', error.message, error);
+        })
+        .finally(() => {
+            functions.logger.info(message);
+            functions.logger.info(participants);
+        });
+
+    return participants;
 });
 
 // exports.updatePage = regionFunctions.onCall(async (data, context) => {
