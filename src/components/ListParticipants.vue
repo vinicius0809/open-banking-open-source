@@ -11,10 +11,10 @@
 </template>
 
 <script>
-import { FUNCTIONS } from "../firebase/app";
 import Participant from "@/components/Participant.vue";
 import json from "../constants/participants.json";
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
+import { getParticipants } from "@/methods/participants.js";
 export default {
   name: "ListParticipants",
   components: {
@@ -23,19 +23,20 @@ export default {
   data() {
     return {
       json,
-      participants: [],
     };
   },
+  computed: mapState(["participants"]),
   created() {
-    this.getParticipants();
+    if (
+      this.participants == null ||
+      this.participants == "undefined" ||
+      this.participants.length == 0
+    ) {
+      getParticipants();
+    }
   },
   methods: {
-    orderedByNameParticipants(participants) {
-      return participants.sort(function(a, b) {
-        return a.RegisteredName.localeCompare(b.RegisteredName)
-      });
-    },
-    ...mapActions(["startLoading", "stopLoading"]),
+    ...mapActions(["startLoading", "stopLoading", "setParticipants"]),
     participantDetails(participant) {
       this.$router.push({
         name: "Participant",
@@ -44,17 +45,6 @@ export default {
           propParticipant: participant,
         },
       });
-    },
-    async getParticipants() {
-      this.startLoading();
-      const url =
-        "https://data.directory.openbankingbrasil.org.br/participants";
-      const getUrlData = FUNCTIONS.httpsCallable("getUrlData");
-      await getUrlData({ url })
-        .then((result) => {
-          this.participants = this.orderedByNameParticipants(result.data);
-        })
-        .finally(() => this.stopLoading());
     },
   },
 };

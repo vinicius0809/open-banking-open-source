@@ -5,22 +5,23 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    loading: false
+    loading: false,
+    participants: []
   },
   mutations: {
-    toggleLoading (state, value) {
-      state.loading = value;
+    updateState(state, obj) {
+      state[obj.property] = obj.value;
     }
   },
   actions: {
-    stopLoading(context){
-      context.commit("toggleLoading", false);
+    stopLoading(context) {
+      context.commit("updateState", { property: "loading", value: false });
     },
-    startLoading(context){
-      context.commit("toggleLoading", true);
+    startLoading(context) {
+      context.commit("updateState", { property: "loading", value: true });
     },
-    isLoading(){
-      return this.state.loading;
+    setParticipants(context, participants) {
+      context.commit("updateState", { property: "participants", value: participants });
     }
   },
   modules: {

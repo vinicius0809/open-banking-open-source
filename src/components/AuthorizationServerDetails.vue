@@ -1,5 +1,14 @@
 <template>
   <div class="authorization-server">
+    <div class="company-present">
+      <img
+        :src="authorizationServer.CustomerFriendlyLogoUri"
+        alt="logo"
+        class="logo"
+      />
+      <h1 class="title">{{ authorizationServer.CustomerFriendlyName }}</h1>
+    </div>
+    <p>{{ authorizationServer.CustomerFriendlyDescription }}</p>
     <div class="title"><strong>Id: </strong>{{ authorizationServerId }}</div>
     <hr />
     <strong> API Resources:</strong>
@@ -31,7 +40,10 @@
           >
             {{ discoveryEndpoint.ApiEndpoint }}
           </button>
-          <DataDetails v-if="shouldShowThisData(discoveryEndpoint.ApiEndpoint)" :urlData="selectedApiData"/>
+          <DataDetails
+            v-if="shouldShowThisData(discoveryEndpoint.ApiEndpoint)"
+            :urlData="selectedApiData"
+          />
         </div>
       </div>
     </div>
@@ -44,18 +56,17 @@
 import { FUNCTIONS } from "../firebase/app";
 import { mapActions, mapState } from "vuex";
 import DataDetails from "@/components/DataDetails.vue";
+import { getParticipants } from "@/methods/participants.js";
 export default {
   props: {
     participantId: String,
-    participant: Object,
     authorizationServerId: String,
-    authorizationServer: Object,
   },
   components: {
     DataDetails,
   },
   computed: {
-    ...mapState(["loading"]),
+    ...mapState(["loading","participants"]),
     showingDetails() {
       return this.isShowingDetails;
     },
@@ -71,7 +82,7 @@ export default {
         this.selectedApiDataUrl == url
       );
     },
-    ...mapActions(["startLoading", "stopLoading", "isLoading"]),
+    ...mapActions(["startLoading", "stopLoading"]),
     showDetails(apiResource) {
       this.isShowingDetails = true;
       this.selectedApiResource = apiResource;
@@ -108,8 +119,38 @@ export default {
       selectedApiResource: {},
       selectedApiData: {},
       selectedApiDataUrl: "",
+      participant: null,
+      authorizationServer: null,
     };
   },
+  async created() {
+    if (
+      this.participants == null ||
+      this.participants == "undefined" ||
+      this.participants.length == 0
+    ) {
+      await getParticipants();
+    }
+
+    if (this.participant == null || this.participant == "undefined") {
+      this.participants.forEach((element) => {
+        if (element.RegistrationId == this.participantId) {
+          this.participant = element;
+        }
+      });
+    }
+
+    if (
+      this.authorizationServer == null ||
+      this.authorizationServer == "undefined"
+    ) {
+      this.participant.AuthorisationServers.forEach((element) => {
+        if (element.AuthorisationServerId == this.authorizationServerId) {
+          this.authorizationServer = element;
+        }
+      });
+    }
+  }
 };
 </script>
 
@@ -131,5 +172,19 @@ export default {
 .api-resource-item:hover {
   cursor: pointer;
   background-color: darkgray;
+}
+.company-present {
+  display: flex;
+  flex-wrap: wrap;
+}
+.logo {
+  flex-grow: 1;
+  align-content: center;
+  align-self: center;
+}
+.title {
+  flex-grow: 1;
+  align-content: center;
+  align-self: center;
 }
 </style>

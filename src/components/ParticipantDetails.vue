@@ -1,5 +1,6 @@
 <template>
   <div class="participant">
+    <h1>{{ participant.RegisteredName }}</h1>
     <div class="title"><strong>Id: </strong>{{ participantId }}</div>
     <hr />
     <strong> Authorization Servers:</strong>
@@ -16,28 +17,49 @@
 
 <script>
 import AuthorizationServer from "@/components/AuthorizationServer.vue";
+import { mapState } from "vuex";
+import { getParticipants } from "@/methods/participants.js";
+
 export default {
   props: {
     participantId: String,
-    participant: Object,
   },
   components: {
     AuthorizationServer,
   },
-  methods:{
-authorizationServerDetails(authorizationServer){
+  methods: {
+    authorizationServerDetails(authorizationServer) {
       this.$router.push({
-        name:"AuthorizationServer",
-        params:{
+        name: "AuthorizationServer",
+        params: {
           propParticipantId: this.participantId,
           propAuthorizationServerId: authorizationServer.AuthorisationServerId,
-          propAuthorizationServer: authorizationServer
+          propAuthorizationServer: authorizationServer,
+        },
+      });
+    },
+  },
+  async created() {
+    if (
+      this.participants == null ||
+      this.participants == "undefined" ||
+      this.participants.length == 0
+    ) {
+      await getParticipants();
+    }
+
+    if (this.participant == null || this.participant == "undefined") {
+      this.participants.forEach((element) => {
+        if (element.RegistrationId == this.participantId) {
+          this.participant = element;
         }
-      })
+      });
     }
   },
+  computed: mapState(["participants"]),
   data() {
     return {
+      participant: null,
     };
   },
 };
