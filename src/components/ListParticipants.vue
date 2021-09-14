@@ -1,20 +1,25 @@
 <template>
-  <div class="participants">
+  <div class="home">
+    <div class="filter">
+      <label for="filter">Filtrar por nome: </label>
+      <input id="filter" v-model="filter" type="text">
+    </div>
+    <div class="participants">
     <Participant
-      v-for="participant in participants"
-      :key="participant.RegistrationId"
-      :companyName="participant.RegisteredName"
-      :authorizationServers="participant.AuthorisationServers"
-      @click.native="participantDetails(participant)"
-    />
+        v-for="participant in participantsFiltered"
+        :key="participant.RegistrationId"
+        :authorizationServers="participant.AuthorisationServers"
+        :companyName="participant.RegisteredName"
+        @click.native="participantDetails(participant)"
+    /></div>
   </div>
 </template>
 
 <script>
 import Participant from "@/components/Participant.vue";
-import json from "../constants/participants.json";
-import { mapActions, mapState } from "vuex";
-import { getParticipants } from "@/methods/participants.js";
+import {mapActions, mapState} from "vuex";
+import {getParticipants} from "../methods/participants.js";
+
 export default {
   name: "ListParticipants",
   components: {
@@ -22,15 +27,26 @@ export default {
   },
   data() {
     return {
-      json,
+      filter: ""
     };
   },
-  computed: mapState(["participants"]),
+  computed: {
+    ...mapState(["participants"]),
+    participantsFiltered() {
+      let result = this.participants;
+      if(this.filter !== ""){
+        result = result
+            .filter(i => i.RegisteredName.toLowerCase().normalize("NFD")
+                .indexOf(this.filter.toLowerCase().normalize("NFD")) > -1);
+      }
+      return result;
+    }
+  },
   created() {
     if (
-      this.participants == null ||
-      this.participants == "undefined" ||
-      this.participants.length == 0
+        this.participants == null ||
+        this.participants === "undefined" ||
+        this.participants.length === 0
     ) {
       getParticipants();
     }
@@ -68,6 +84,9 @@ a {
 }
 .participants {
   display: flex;
+  flex-wrap: wrap;
+}
+.filter{
   flex-wrap: wrap;
 }
 </style>
