@@ -100,16 +100,14 @@ export default {
     },
     getApiData(url) {
       this.startLoading();
-      console.log("Chamando url: " + url);
       const getUrlData = FUNCTIONS.httpsCallable("getUrlData");
       let data = { url };
       getUrlData(data)
         .then((response) => {
           this.selectedApiData = response;
           this.selectedApiDataUrl = url;
-          console.log(this.selectedApiData);
         })
-        .catch((error) => console.log(error.message))
+        .catch((error) => alert(error.message))
         .finally(() => this.stopLoading());
     },
   },
