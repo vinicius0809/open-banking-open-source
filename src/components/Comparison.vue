@@ -17,12 +17,23 @@
     <div class="credit-type" v-if="filterCreditType">
       <label for="credit-type">Selecione as empresas: </label>
       <button
-        type="checkbox"
-        v-for="type in participantsWithThisCreditType"
-        :key="type.RegistrationId"
+        :class="getParticipantClass(participant)"
+        v-for="participant in participantsWithThisCreditType"
+        :key="participant.RegistrationId"
+        @click="toggleParticipantToComparison(participant)"
       >
-        {{ type.RegisteredName }}
+        {{ participant.RegisteredName }}
       </button>
+    </div>
+    <div class="comparison-data" v-if="comparisonParticipants.length > 0">
+      <table
+        v-for="participant in comparisonParticipantsData"
+        :key="participant.participantName"
+      >
+        <tr>
+          <th>{{ test.data.brand.name }}</th>
+        </tr>
+      </table>
     </div>
   </div>
 </template>
@@ -30,14 +41,17 @@
 <script>
 import { mapState } from "vuex";
 import { getParticipants } from "../methods/participants";
+import { getUrlData } from "../methods/firebaseFunctions";
 
 export default {
   name: "Comparison",
   data() {
     return {
       filterCreditType: "",
-      participantAuthorizationServers: [],
+      participantUrls: [],
       filteredParticipants: [],
+      comparisonParticipants: [],
+      test: null,
     };
   },
   computed: {
@@ -51,10 +65,27 @@ export default {
               apiResource.ApiDiscoveryEndpoints.forEach((endpoint) => {
                 if (
                   this.filterCreditType &&
-                  endpoint.ApiEndpoint.indexOf(this.filterCreditType) > -1 &&
-                  !filteredParticipants.includes(participant)
+                  endpoint.ApiEndpoint.indexOf(this.filterCreditType) > -1
                 ) {
-                  filteredParticipants.push(participant);
+                  let position = this.participantUrls.findIndex(
+                    (x) => x.participantName === participant.RegisteredName
+                  );
+                  if (position === -1) {
+                    this.participantUrls.push({
+                      participantName: participant.RegisteredName,
+                      participantUrls: [],
+                    });
+                  }
+                  position = this.participantUrls.findIndex(
+                    (x) => x.participantName === participant.RegisteredName
+                  );
+                  this.participantUrls[position].participantUrls.push(
+                    endpoint.ApiEndpoint
+                  );
+
+                  if (filteredParticipants.indexOf(participant) === -1) {
+                    filteredParticipants.push(participant);
+                  }
                 }
               });
             }
@@ -63,6 +94,10 @@ export default {
       });
       return filteredParticipants;
     },
+    comparisonParticipantsData(){
+      let comparisonParticipants = this.comparisonParticipants;
+      
+    }
   },
   created() {
     if (
@@ -73,7 +108,43 @@ export default {
       getParticipants();
     }
   },
+  methods: {
+    toggleParticipantToComparison(participant) {
+      const position = this.comparisonParticipants.findIndex(
+        (x) => x.participantName === participant.RegisteredName
+      );
+      if (position === -1) {
+        const participantUrls = this.participantUrls.find(
+          (x) => x.participantName === participant.RegisteredName
+        );
+        this.comparisonParticipants.push(participantUrls);
+      } else {
+        this.comparisonParticipants.splice(position, 1);
+      }
+    },
+    getParticipantClass(participant) {
+      const position = this.comparisonParticipants.findIndex(
+        (x) => x.participantName === participant.RegisteredName
+      );
+      let result = "participant";
+      result += position > -1 ? "-selected" : "";
+      return result;
+    },
+    getData(url) {
+      return getUrlData({ url })
+        .then((res) => {
+          this.test = res.data;
+        })
+        .finally(() => {
+          return this.test;
+        });
+    },
+  },
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.participant-selected {
+  background-color: yellow;
+}
+</style>
