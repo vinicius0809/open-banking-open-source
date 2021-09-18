@@ -27,11 +27,11 @@
     </div>
     <div class="comparison-data" v-if="comparisonParticipants.length > 0">
       <table
-        v-for="participant in comparisonParticipantsData"
-        :key="participant.participantName"
+        v-for="interestRate in interestRatesFromAllComparisonCompanies"
+        :key="interestRate.type"
       >
         <tr>
-          <th>{{ test.data.brand.name }}</th>
+          <th>{{ interestRate.type }}</th>
         </tr>
       </table>
     </div>
@@ -51,7 +51,7 @@ export default {
       participantUrls: [],
       filteredParticipants: [],
       comparisonParticipants: [],
-      test: null,
+      dataObject: null,
     };
   },
   computed: {
@@ -65,7 +65,10 @@ export default {
               apiResource.ApiDiscoveryEndpoints.forEach((endpoint) => {
                 if (
                   this.filterCreditType &&
-                  endpoint.ApiEndpoint.indexOf(this.filterCreditType) > -1
+                  this.checkUrlAndFilteredType(
+                    endpoint.ApiEndpoint,
+                    this.filterCreditType
+                  )
                 ) {
                   let position = this.participantUrls.findIndex(
                     (x) => x.participantName === participant.RegisteredName
@@ -94,10 +97,28 @@ export default {
       });
       return filteredParticipants;
     },
-    comparisonParticipantsData(){
-      let comparisonParticipants = this.comparisonParticipants;
-      
-    }
+    interestRatesFromAllComparisonCompanies() {
+      let interestRates = [];
+      this.comparisonParticipants.forEach((participant) => {
+        let participantData = [];
+        participant.participantUrls.forEach((url) => {
+          if (this.checkUrlAndFilteredType(url, this.filterCreditType)) {
+            this.getData(url).then((res) => {
+              alert("Entrou no then de cima! Res: " + res);
+              participantData.push(res);
+              res.data.brand.companies.forEach((company) => {
+                this.genericLoans(company)[0].interestRates.forEach((interestRate) => {
+                  interestRates.push(interestRate);
+                });
+              });
+            });
+          }
+        });
+        participant["participantData"] = participantData;
+      });
+
+      return interestRates;
+    },
   },
   created() {
     if (
@@ -109,6 +130,18 @@ export default {
     }
   },
   methods: {
+    checkUrlAndFilteredType(url, type) {
+      let result = false;
+
+      if (type === "financing") {
+        result =
+          url.indexOf("invoice-financing") === -1 && url.indexOf(type) > -1;
+      } else {
+        result = url.indexOf(type) > -1;
+      }
+
+      return result;
+    },
     toggleParticipantToComparison(participant) {
       const position = this.comparisonParticipants.findIndex(
         (x) => x.participantName === participant.RegisteredName
@@ -130,14 +163,21 @@ export default {
       result += position > -1 ? "-selected" : "";
       return result;
     },
-    getData(url) {
-      return getUrlData({ url })
-        .then((res) => {
-          this.test = res.data;
-        })
-        .finally(() => {
-          return this.test;
-        });
+    async getData(url) {
+      return await getUrlData({ url }).then((res) => {
+        alert("Entrou no then! Data: " + res.data.data);
+        this.dataObject = res.data;
+        return res.data;
+      });
+    },
+    genericLoans(company) {
+      let result = {};
+      Object.keys(company).forEach((key) => {
+        if (key.indexOf("personal") > -1 || key.indexOf("business") > -1) {
+          result = company[key];
+        }
+      });
+      return result;
     },
   },
 };
