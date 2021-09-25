@@ -2,10 +2,16 @@
   <div class="main">
     Dentro do componente
     <div class="filter-credit-type">
+      <label for="filter-person-type">Filtrar por tipo de conta: </label>
+      <select id="filter-person-type" v-model="filterPersonType">
+        <option value="both">Ambos</option>
+        <option value="pf">Pessoa Física</option>
+        <option value="pj">Pessoa Jurídica</option>
+      </select>
       <label for="filter-credit-type">Filtrar por tipo de crédito: </label>
       <select id="filter-credit-type" v-model="filterCreditType">
         <option value="loan">Empréstimo</option>
-        <option value="financing" selected>Financiamento</option>
+        <option value="financing">Financiamento</option>
         <option value="invoice-financing">Antecipação de Recebíveis</option>
         <option value="credit-card">Cartão de Crédito</option>
       </select>
@@ -48,6 +54,7 @@ export default {
   data() {
     return {
       filterCreditType: "",
+      filterPersonType: "both",
       participantUrls: [],
       filteredParticipants: [],
       comparisonParticipants: [],
@@ -66,8 +73,8 @@ export default {
         participant.participantData.forEach((d) => {
           d?.data?.brand.companies.forEach((company) => {
             this.genericLoans(company).forEach((genericLoan) => {
-                genericLoan["companyName"] = company.name;
-                this.creditTypes.push(genericLoan);
+              genericLoan["companyName"] = company.name;
+              this.creditTypes.push(genericLoan);
             });
           });
         });
@@ -90,7 +97,8 @@ export default {
         } else {
           // existe este tipo de crédito na lista
           const mapCreditTypesWithCompanies = this.mapCreditTypesWithCompanies;
-          const companies =            mapCreditTypesWithCompanies[index].companiesInterestRates;
+          const companies =
+            mapCreditTypesWithCompanies[index].companiesInterestRates;
           const indexCompany = companies.findIndex((x) => {
             return x.companyName === obj.companyName;
           });
@@ -108,21 +116,40 @@ export default {
 
       this.mapCreditTypesWithCompanies.forEach((obj) => {
         const headerTable = "".concat(
-          "<hr><table class='table-data'><tr><th colspan='7'>Crédito: ",
+          "<hr><table class='table-data'><tr><th colspan='9'>Crédito: ",
           obj.type,
-          "</th></tr><tr><th>Empresa</th><th>Mínimo</th><th>Faixa 1</th><th>Faixa 2</th><th>Faixa 3</th><th>Faixa 4</th><th>Máximo</th></tr>"
+          "</th></tr><tr><th>Empresa</th><th>Indexador</th><th>Rate</th><th>Mínimo</th><th>Faixa 1</th><th>Faixa 2</th><th>Faixa 3</th><th>Faixa 4</th><th>Máximo</th></tr>"
         );
         const endTable = "</table>";
         let midTable = "";
         obj.companiesInterestRates.forEach((company) => {
-          let name= "<tr><td rowspan='>".concat(company.interestRates.length+"'>",company.companyName,              "</td>");
-          let minimum = this.generateTdData(company.interestRates, 'minimum');
-          let maximum = this.generateTdData(company.interestRates, 'maximum');
-          let layer1 = this.generateTdData(company.interestRates, '1');
-          let layer2 = this.generateTdData(company.interestRates, '2');
-          let layer3 = this.generateTdData(company.interestRates, '3');
-          let layer4 = this.generateTdData(company.interestRates, '4');
-          midTable = midTable.concat(name, minimum, layer1, layer2, layer3, layer4, maximum,"</tr>");
+          const name = "<tr><td rowspan='".concat(
+            company.interestRates.length + 1,
+            "'><strong>",
+            company.companyName,
+            "</strong></td>"
+          );
+          const stringsToFillTable = [
+            "indexerType",
+            "indexerRate",
+            "minimum",
+            "1",
+            "2",
+            "3",
+            "4",
+            "maximum",
+          ];
+          midTable = midTable.concat(name);
+          company.interestRates.forEach((interestRate) => {
+            midTable = midTable.concat("<tr>");
+            stringsToFillTable.forEach((str) => {
+              midTable = midTable.concat(
+                this.generateTdData(interestRate, str)
+              );
+            });
+            midTable = midTable.concat("</tr>");
+          });
+          midTable = midTable.concat("</tr>");
         });
         html = html.concat(headerTable, midTable, endTable);
       });
@@ -139,7 +166,8 @@ export default {
                   this.filterCreditType &&
                   this.checkUrlAndFilteredType(
                     endpoint.ApiEndpoint,
-                    this.filterCreditType
+                    this.filterCreditType,
+                    this.filterPersonType
                   )
                 ) {
                   let position = this.participantUrls.findIndex(
@@ -180,70 +208,76 @@ export default {
     }
   },
   methods: {
-    generateTdData(interestRates, typeData){
+    generateTdData(interestRate, typeData) {
       typeData = typeData.toString();
-      let result = "";
-      interestRates.forEach(interestRate => {
-        result = result.concat("<td>",interestRates.length);
-        switch (typeData) {
-          case "minimum":
-            result = result.concat(this.formatToPercentage(interestRate.minimumRate));
-            break;
-          case "maximum":
-            result = result.concat(this.formatToPercentage(interestRate.maximumRate));
-            break;
-          default:
-            result = result.concat(this.formatToPercentage(interestRate.applications.find(x => x.interval.indexOf(typeData) > -1).indexer.rate));
-            break;
-        }
-        result = result.concat("</td>");
-      });
+      let result = "<td>";
+      switch (typeData) {
+        case "minimum":
+          result = result.concat(
+            this.formatToPercentage(interestRate.minimumRate)
+          );
+          break;
+        case "maximum":
+          result = result.concat(
+            this.formatToPercentage(interestRate.maximumRate)
+          );
+          break;
+        case "indexerRate":
+          result = result.concat(this.formatToPercentage(interestRate.rate));
+          break;
+        case "indexerType":
+          result = result.concat(interestRate.referentialRateIndexer);
+          break;
+        default:
+          result = result.concat(
+            this.formatToPercentage(
+              interestRate.applications.find(
+                (x) => x.interval.indexOf(typeData) > -1
+              ).indexer.rate
+            )
+          );
+          break;
+      }
+      result = result.concat("</td>");
       return result;
     },
-    /*interestRatesFromAllComparisonCompanies() {
-      let interestRates = [];
-      this.comparisonParticipants.forEach((participant) => {
-        let participantData = [];
-        participant.participantUrls.forEach(async (url) => {
-          if (this.checkUrlAndFilteredType(url, this.filterCreditType)) {
-            participantData.push(this.getData(url).then((res) => {
-              return res.data;
-            }));
-
-            participantData[
-              participantData.length - 1
-            ].data.brand.companies.forEach((company) => {
-              let obj = this.genericLoans(company)[0];
-              obj.interestRates.forEach((interestRate) => {
-                interestRates.push(interestRate);
-              });
-            });
-          }
-        });
-        participant["participantData"] = participantData;
-      });
-      return interestRates;
-    },*/
-    formatToPercentage(number){
-      return (number * 100).toFixed(2) + "%";
+    formatToPercentage(number) {
+      return Number.isNaN(Number(number))
+        ? "NA"
+        : (number * 100).toFixed(2) + "%";
     },
-    checkUrlAndFilteredType(url, type) {
+    checkUrlAndFilteredType(url, type, personType) {
       let result = false;
-
-      if (type === "financing") {
-        result =
-          url.indexOf("invoice-financing") === -1 && url.indexOf(type) > -1;
+      if (personType === "both" || personType === "") {
+        if (type === "financing") {
+          result =
+            url.indexOf("invoice-financing") === -1 && url.indexOf(type) > -1;
+        } else {
+          result = url.indexOf(type) > -1;
+        }
       } else {
-        result = url.indexOf(type) > -1;
+        personType = personType === "pf" ? "personal" : "business";
+        if (type === "financing") {
+          result =
+            url.indexOf("invoice-financing") === -1 &&
+            url.indexOf(type) > -1 &&
+            url.indexOf(personType) > -1;
+        } else {
+          result = url.indexOf(type) > -1 && url.indexOf(personType) > -1;
+        }
       }
 
       return result;
     },
     toggleParticipantToComparison(participant) {
-      const position = this.comparisonParticipants.findIndex(
-        (x) => x.participantName === participant.RegisteredName
+      const positionInComparisonParticipants =
+        this.comparisonParticipants.findIndex(
+          (x) => x.participantName === participant.RegisteredName
+        );
+      const positionInParticipantUrls = this.participantUrls.findIndex(
+          (x) => x.participantName === participant.RegisteredName
       );
-      if (position === -1) {
+      if (positionInComparisonParticipants === -1) {
         const participantUrls = this.participantUrls.find(
           (x) => x.participantName === participant.RegisteredName
         ).participantUrls;
@@ -261,7 +295,12 @@ export default {
         });
         this.comparisonParticipants.push(obj);
       } else {
-        this.comparisonParticipants.splice(position, 1);
+        this.mapCreditTypesWithCompanies.forEach(creditType => {
+          const index = creditType.companiesInterestRates.findIndex(c => c.companyName === participant.RegisteredName);
+          creditType.companiesInterestRates.splice(index,1);
+        });
+        this.participantUrls.splice(positionInParticipantUrls, 1);
+        this.comparisonParticipants.splice(positionInComparisonParticipants, 1);
       }
     },
     getParticipantClass(participant) {
@@ -291,9 +330,13 @@ export default {
 };
 </script>
 
-<style >
+<style>
 .participant-selected {
   background-color: yellow;
+  padding: 8px;
+}
+.participant {
+  padding: 8px;
 }
 .table-data {
   font-family: Arial, Helvetica, sans-serif;
@@ -301,20 +344,21 @@ export default {
   width: 100%;
 }
 
-.table-data td, .table-data th {
+.table-data td,
+.table-data th {
   border: 1px solid #ddd;
   padding: 8px;
 }
 
-.table-data tr:nth-child(even){background-color: #f2f2f2;}
-
-.table-data tr:hover {background-color: #ddd;}
+.table-data tr:hover {
+  background-color: #ddd;
+}
 
 .table-data th {
   padding-top: 8px;
   padding-bottom: 8px;
   text-align: left;
-  background-color: #04AA6D;
+  background-color: #04aa6d;
   color: white;
 }
 </style>
