@@ -34,7 +34,6 @@ export default {
         params: {
           propParticipantId: this.participantId,
           propAuthorizationServerId: authorizationServer.AuthorisationServerId,
-          propAuthorizationServer: authorizationServer,
         },
       });
     },
