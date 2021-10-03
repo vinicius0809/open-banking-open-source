@@ -36,21 +36,27 @@
         {{ participant.RegisteredName }}
       </button>
     </div>
-    <div
-      class="comparison-data"
-      v-if="comparisonParticipants.length > 0"
-      v-html="renderTables"
-    ></div>
+      <ComparisonTable
+          class="comparison-data"
+          v-for="creditType in creditTypesSelected"
+          :key="creditType"
+        :participants="comparisonFilteredByCreditType(creditType)"
+        :creditType="creditType"
+      />
   </div>
 </template>
 
 <script>
-import { mapState } from "vuex";
-import { getParticipants } from "../methods/participants";
-import { getUrlData } from "../methods/firebaseFunctions";
+import {mapActions, mapState} from "vuex";
+import {getParticipants} from "../methods/participants";
+import {getUrlData} from "../methods/firebaseFunctions";
+import ComparisonTable from "./ComparisonTable";
 
 export default {
   name: "Comparison",
+  components: {
+    ComparisonTable,
+  },
   data() {
     return {
       filterCreditType: "",
@@ -65,100 +71,6 @@ export default {
       return this.participantsLocal.filter((x) => x.toCompare);
     },
     ...mapState(["participants"]),
-    renderTables() {
-      let html = "";
-      this.comparisonParticipants.forEach((participant) => {
-        participant.participantUrls.forEach((obj) => {
-          obj?.data?.data?.brand?.companies.forEach((company) => {
-            this.genericLoans(company).forEach((genericLoan) => {
-              genericLoan["companyName"] = company.name;
-              if (
-                participant.participantCreditData.findIndex(
-                  (x) =>
-                    x.type === genericLoan.type &&
-                    x.companyName === company.name
-                ) === -1
-              ) {
-                participant.participantCreditData.push(genericLoan);
-              }
-              if (
-                participant.participantCreditTypes.indexOf(genericLoan.type) ===
-                -1
-              ) {
-                participant.participantCreditTypes.push(genericLoan.type);
-              }
-              if (this.creditTypesSelected.indexOf(genericLoan.type) === -1) {
-                this.creditTypesSelected.push(genericLoan.type);
-              }
-            });
-          });
-        });
-      });
-
-      this.creditTypesSelected.forEach((creditType) => {
-        const comparisonFilteredByCreditType =
-          this.comparisonParticipants.filter((x) =>
-            x.participantCreditTypes.includes(creditType)
-          );
-        if (comparisonFilteredByCreditType.length > 0) {
-          let headerTable = "".concat(
-            "<hr><table class='table-data'>",
-            "<tr><th colspan='9'>Crédito: ",
-            creditType,
-            "</th></tr><tr>",
-            "<th>Empresa</th>",
-            "<th>Indexador</th>",
-            "<th>Rate</th>",
-            "<th>Mínimo</th>",
-            "<th>Faixa 1</th>",
-            "<th>Faixa 2</th>",
-            "<th>Faixa 3</th>",
-            "<th>Faixa 4</th>",
-            "<th>Máximo</th></tr>"
-          );
-          let endTable = "</table>";
-          let midTable = "";
-          const stringsToFillTable = [
-            "indexerType",
-            "indexerRate",
-            "minimum",
-            "1",
-            "2",
-            "3",
-            "4",
-            "maximum",
-          ];
-          comparisonFilteredByCreditType.forEach((participant) => {
-            const datas = participant.participantCreditData.filter(
-              (x) => x.type === creditType
-            );
-            datas.forEach((data) => {
-              const name = "<tr><td rowspan='".concat(
-                data.interestRates.length + 1,
-                "'><strong>",
-                data.companyName,
-                "</strong></td>"
-              );
-              midTable = midTable.concat(name);
-
-              data.interestRates.forEach((interestRate) => {
-                midTable = midTable.concat("<tr>");
-                stringsToFillTable.forEach((str) => {
-                  midTable = midTable.concat(
-                    this.generateTdData(interestRate, str)
-                  );
-                });
-                midTable = midTable.concat("</tr>");
-              });
-
-              midTable = midTable.concat("</tr>");
-            });
-          });
-          html = html.concat(headerTable, midTable, endTable);
-        }
-      });
-      return html;
-    },
     participantsWithThisCreditType() {
       let filteredParticipants = [];
       this.participants.forEach((participant) => {
@@ -183,7 +95,6 @@ export default {
                       participantId: participant.RegistrationId,
                       participantUrls: [],
                       toCompare: false,
-                      participantData: [],
                       participantCreditTypes: [],
                       participantCreditData: [],
                     });
@@ -218,42 +129,46 @@ export default {
     }
   },
   methods: {
-    clearObjects() {
+    ...mapActions(["startLoading", "stopLoading"]),
+    loadData(){
       this.comparisonParticipants.forEach((participant) => {
-        participant.toCompare = false;
-        participant.participantData = [];
+        participant.participantUrls.forEach((obj) => {
+          obj?.data?.data?.brand?.companies.forEach((company) => {
+            this.genericLoans(company).forEach((genericLoan) => {
+              genericLoan["companyName"] = company.name;
+              if (
+                  participant.participantCreditData.findIndex(
+                      (x) =>
+                          x.type === genericLoan.type &&
+                          x.companyName === company.name
+                  ) === -1
+              ) {
+                participant.participantCreditData.push(genericLoan);
+              }
+              if (
+                  participant.participantCreditTypes.indexOf(genericLoan.type) ===
+                  -1
+              ) {
+                participant.participantCreditTypes.push(genericLoan.type);
+              }
+              if (this.creditTypesSelected.indexOf(genericLoan.type) === -1) {
+                this.creditTypesSelected.push(genericLoan.type);
+              }
+            });
+          });
+        });
       });
     },
-    generateTdData(interestRate, typeData) {
-      let result = "<td>";
-      switch (typeData) {
-        case "minimum":
-          result += this.formatToPercentage(interestRate.minimumRate);
-          break;
-        case "maximum":
-          result += this.formatToPercentage(interestRate.maximumRate);
-          break;
-        case "indexerRate":
-          result += this.formatToPercentage(interestRate.rate);
-          break;
-        case "indexerType":
-          result += interestRate.referentialRateIndexer;
-          break;
-        default:
-          result += this.formatToPercentage(
-            interestRate.applications.find(
-              (x) => x.interval.indexOf(typeData) > -1
-            ).indexer.rate
-          );
-          break;
-      }
-      result += "</td>";
-      return result;
+    comparisonFilteredByCreditType(creditType) {
+      return this.comparisonParticipants.filter((x) =>
+          x.participantCreditTypes.includes(creditType)
+      );
     },
-    formatToPercentage(number) {
-      return Number.isNaN(Number(number))
-        ? "NA"
-        : (number * 100).toFixed(2) + "%";
+    clearObjects() {
+      this.creditTypesSelected = [];
+      this.comparisonParticipants.forEach((participant) => {
+        participant.toCompare = false;
+      });
     },
     checkUrlAndFilteredType(url, type, personType) {
       let result = false;
@@ -266,7 +181,6 @@ export default {
         result =
           url.indexOf(type) > -1 && this.checkPersonType(url, personType);
       }
-
       return result;
     },
     checkPersonType(url, personType) {
@@ -283,24 +197,26 @@ export default {
         this.participantsLocal[positionInParticipantsLocal].toCompare =
           !this.participantsLocal[positionInParticipantsLocal].toCompare;
       }
-
-      this.comparisonParticipants.forEach((participant) => {
-        if (
-          participant.participantData === null ||
-          participant.participantData.length < 1
-        ) {
+      if(this.comparisonParticipants.length > 0) {
+        this.comparisonParticipants.forEach((participant) => {
           participant.participantUrls.forEach(async (obj) => {
             if (
-              this.filterPersonType === "both" ||
-              obj.url.indexOf(this.filterPersonType) > -1
+                this.filterPersonType === "both" ||
+                obj.url.indexOf(this.filterPersonType) > -1
             ) {
-              obj.data = await this.getData(obj.url).then((res) => {
-                return res.data;
-              });
+              this.startLoading();
+              await this.getData(obj.url).then((res) => {
+                obj.data = res.data;
+                this.loadData();
+              })
+              .finally(() => this.stopLoading());
             }
           });
-        }
-      });
+        });
+      }
+      else{
+        this.clearObjects();
+      }
     },
     getParticipantClass(participant) {
       const position = this.comparisonParticipants.findIndex(
@@ -333,28 +249,5 @@ export default {
 }
 .participant {
   padding: 8px;
-}
-.table-data {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.table-data td,
-.table-data th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.table-data tr:hover {
-  background-color: #ddd;
-}
-
-.table-data th {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  background-color: #04aa6d;
-  color: white;
-  text-align: center;
 }
 </style>
