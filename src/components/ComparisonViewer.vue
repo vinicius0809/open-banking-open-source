@@ -1,62 +1,38 @@
 <template>
   <div class="main">
-      <table class="table-data">
-        <tr>
-          <th colspan="13">Crédito: {{ this.creditType }}</th>
-        </tr>
-        <tr>
-          <th rowspan="2">Empresa</th>
-          <th rowspan="2">Indexador</th>
-          <th rowspan="2">Rate</th>
-          <th rowspan="2">Mínimo</th>
-          <th colspan="2">Faixa 1</th>
-          <th colspan="2">Faixa 2</th>
-          <th colspan="2">Faixa 3</th>
-          <th colspan="2">Faixa 4</th>
-          <th rowspan="2">Máximo</th>
-        </tr>
-        <tr>
-          <th v-for="i in 8" :key="i">
-            {{ returnThInterestOrClientRate(i) }}
-          </th>
-        </tr>
-        <template v-for="participant in participants">
-          <tr :key="participant.participantId">
-            <td
-              :rowspan="
-                participantCreditData(participant).interestRates.length + 1
-              "
-            >
-              <strong>
-                {{ participantCreditData(participant).companyName }}
-              </strong>
-            </td>
-          </tr>
-          <tr
-            v-for="interestRate in participantCreditData(participant)
-              .interestRates"
-            :key="interestRate.companyName"
-          >
-            <td v-for="str in stringsToFillTable" :key="str">
-              {{ generateTdData(interestRate, str) }}
-            </td>
-          </tr>
-        </template>
-      </table>
+    <hr />
+    <ComparisonTable
+      v-if="!graphView"
+      :participants="participants"
+      :credit-type="creditType"
+    />
+    <ComparisonChart
+      v-else
+      :participants="participants"
+      :credit-type="creditType"
+      :color-map="colorMap"
+    />
   </div>
 </template>
 
 <script>
+import ComparisonTable from "./ComparisonTable";
+import ComparisonChart from "./ComparisonChart";
+import {mapState} from "vuex";
 export default {
-  name: "ComparisonTable",
+  name: "ComparisonViewer",
+  components: {
+    ComparisonTable,
+    ComparisonChart,
+  },
   props: {
     participants: Array,
     creditType: String,
+    graphView: Boolean,
   },
   data() {
     return {
       filterCreditType: "",
-      graphView: false,
       filterPersonType: "both",
       participantsLocal: [],
       dataTables: "",
@@ -65,22 +41,18 @@ export default {
         "indexerType",
         "indexerRate",
         "minimum",
-        "indexer-1",
-        "customers-1",
-        "indexer-2",
-        "customers-2",
-        "indexer-3",
-        "customers-3",
-        "indexer-4",
-        "customers-4",
+        "1",
+        "2",
+        "3",
+        "4",
         "maximum",
-      ],
+      ]
     };
   },
+  computed:{
+    ...mapState(["colorMap"])
+  },
   methods: {
-    returnThInterestOrClientRate(i){
-      return (i % 2 === 0) ? "% Clientes" : "Juros";
-    },
     participantCreditData(participant) {
       const participantLocal = this.participants.find(
         (x) => x.participantId === participant.participantId
@@ -107,8 +79,8 @@ export default {
         default:
           result += this.formatToPercentage(
             interestRate.applications.find(
-              (x) => x.interval.indexOf([typeData.split("-")[1]]) > -1
-            )[typeData.split("-")[0]].rate
+              (x) => x.interval.indexOf(typeData) > -1
+            ).indexer.rate
           );
           break;
       }
@@ -146,5 +118,10 @@ export default {
   background-color: #04aa6d;
   color: white;
   text-align: center;
+}
+
+.graph-icon:hover {
+  cursor: pointer;
+  background-color: darkgreen;
 }
 </style>

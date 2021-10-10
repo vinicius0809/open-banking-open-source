@@ -1,17 +1,18 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from "vue";
+import Vuex from "vuex";
 
-Vue.use(Vuex)
+Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
     loading: false,
-    participants: []
+    participants: [],
+    colorMap: [],
   },
   mutations: {
     updateState(state, obj) {
       state[obj.property] = obj.value;
-    }
+    },
   },
   actions: {
     stopLoading(context) {
@@ -21,9 +22,14 @@ export default new Vuex.Store({
       context.commit("updateState", { property: "loading", value: true });
     },
     setParticipants(context, participants) {
-      context.commit("updateState", { property: "participants", value: participants });
-    }
+      context.commit("updateState", {
+        property: "participants",
+        value: participants,
+      });
+    },
+    setColorMap(context, colorMap) {
+      context.commit("updateState", { property: "colorMap", value: colorMap });
+    },
   },
-  modules: {
-  }
-})
+  modules: {},
+});
