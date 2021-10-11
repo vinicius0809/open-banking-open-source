@@ -4,7 +4,7 @@
   </div>
 </template>
 <script>
-import Comparison from '@/components/Comparison.vue'
+import Comparison from '@/components/Comparison/Comparison.vue'
 export default {
   name: 'Home',
   components: {

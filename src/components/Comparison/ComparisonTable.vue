@@ -1,44 +1,48 @@
 <template>
   <div class="main">
-    <hr />
-    <table class="table-data">
-      <tr>
-        <th colspan="9">Crédito: {{ this.creditType }}</th>
-      </tr>
-      <tr>
-        <th>Empresa</th>
-        <th>Indexador</th>
-        <th>Rate</th>
-        <th>Mínimo</th>
-        <th>Faixa 1</th>
-        <th>Faixa 2</th>
-        <th>Faixa 3</th>
-        <th>Faixa 4</th>
-        <th>Máximo</th>
-      </tr>
-      <template v-for="participant in participants">
-        <tr :key="participant.participantId">
-          <td
-            :rowspan="
-              participantCreditData(participant).interestRates.length + 1
-            "
+      <table class="table-data">
+        <tr>
+          <th colspan="13">Crédito: {{ this.creditType }}</th>
+        </tr>
+        <tr>
+          <th rowspan="2">Empresa</th>
+          <th rowspan="2">Indexador</th>
+          <th rowspan="2">Rate</th>
+          <th rowspan="2">Mínimo</th>
+          <th colspan="2">Faixa 1</th>
+          <th colspan="2">Faixa 2</th>
+          <th colspan="2">Faixa 3</th>
+          <th colspan="2">Faixa 4</th>
+          <th rowspan="2">Máximo</th>
+        </tr>
+        <tr>
+          <th v-for="i in 8" :key="i">
+            {{ returnThInterestOrClientRate(i) }}
+          </th>
+        </tr>
+        <template v-for="participant in participants">
+          <tr :key="participant.participantId">
+            <td
+              :rowspan="
+                participantCreditData(participant).interestRates.length + 1
+              "
+            >
+              <strong>
+                {{ participantCreditData(participant).companyName }}
+              </strong>
+            </td>
+          </tr>
+          <tr
+            v-for="interestRate in participantCreditData(participant)
+              .interestRates"
+            :key="interestRate.companyName"
           >
-            <strong>
-              {{ participantCreditData(participant).companyName }}
-            </strong>
-          </td>
-        </tr>
-        <tr
-          v-for="interestRate in participantCreditData(participant)
-            .interestRates"
-          :key="interestRate.companyName"
-        >
-          <td v-for="str in stringsToFillTable" :key="str">
-            {{ generateTdData(interestRate, str) }}
-          </td>
-        </tr>
-      </template>
-    </table>
+            <td v-for="str in stringsToFillTable" :key="str">
+              {{ generateTdData(interestRate, str) }}
+            </td>
+          </tr>
+        </template>
+      </table>
   </div>
 </template>
 
@@ -52,6 +56,7 @@ export default {
   data() {
     return {
       filterCreditType: "",
+      graphView: false,
       filterPersonType: "both",
       participantsLocal: [],
       dataTables: "",
@@ -60,15 +65,22 @@ export default {
         "indexerType",
         "indexerRate",
         "minimum",
-        "1",
-        "2",
-        "3",
-        "4",
+        "indexer-1",
+        "customers-1",
+        "indexer-2",
+        "customers-2",
+        "indexer-3",
+        "customers-3",
+        "indexer-4",
+        "customers-4",
         "maximum",
       ],
     };
   },
   methods: {
+    returnThInterestOrClientRate(i){
+      return (i % 2 === 0) ? "% Clientes" : "Juros";
+    },
     participantCreditData(participant) {
       const participantLocal = this.participants.find(
         (x) => x.participantId === participant.participantId
@@ -95,8 +107,8 @@ export default {
         default:
           result += this.formatToPercentage(
             interestRate.applications.find(
-              (x) => x.interval.indexOf(typeData) > -1
-            ).indexer.rate
+              (x) => x.interval.indexOf([typeData.split("-")[1]]) > -1
+            )[typeData.split("-")[0]].rate
           );
           break;
       }
