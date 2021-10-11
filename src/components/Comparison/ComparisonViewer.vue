@@ -96,12 +96,6 @@ export default {
 </script>
 
 <style>
-.table-data {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
 .table-data td,
 .table-data th {
   border: 1px solid #ddd;
@@ -118,10 +112,5 @@ export default {
   background-color: #04aa6d;
   color: white;
   text-align: center;
-}
-
-.graph-icon:hover {
-  cursor: pointer;
-  background-color: darkgreen;
 }
 </style>

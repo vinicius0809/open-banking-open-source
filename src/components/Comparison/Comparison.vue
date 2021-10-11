@@ -40,7 +40,7 @@
         {{ participant.RegisteredName }}
       </button>
     </div>
-    <ComparisonTable
+    <ComparisonViewer
       class="comparison-data"
       v-for="creditType in creditTypesSelected"
       :key="creditType"
@@ -53,14 +53,14 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
-import { getParticipants } from "../methods/participants";
-import { getUrlData } from "../methods/firebaseFunctions";
-import ComparisonTable from "./ComparisonViewer";
+import { getParticipants } from "../../methods/participants";
+import { getUrlData } from "../../methods/firebaseFunctions";
+import ComparisonViewer from "./ComparisonViewer";
 
 export default {
   name: "Comparison",
   components: {
-    ComparisonTable,
+    ComparisonViewer,
   },
   data() {
     return {
@@ -199,6 +199,7 @@ export default {
       this.comparisonParticipants.forEach((participant) => {
         participant.toCompare = false;
       });
+      this.participantsLocal = [];
     },
     checkUrlAndFilteredType(url, type, personType) {
       let result = false;
