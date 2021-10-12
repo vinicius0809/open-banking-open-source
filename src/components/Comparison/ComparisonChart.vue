@@ -6,28 +6,30 @@
 </template>
 
 <script>
-import {Chart, registerables} from "chart.js";
-import {mapState} from "vuex";
-import {multiplyByIfNumber} from "../../methods/utils";
+import { Chart, registerables } from "chart.js";
+import { mapState } from "vuex";
+import { multiplyByIfNumber } from "../../methods/utils";
 
 export default {
   name: "ComparisonChart",
   props: {
     participants: Array,
-    creditType: String
+    creditType: String,
   },
   mounted() {
-    const ctx = document.getElementById(this.creditType);
-    Chart.register(...registerables);
-    new Chart(ctx, this.getCreditTypeData);
+    this.createChart();
   },
   computed: {
-      ...mapState(["colorMap"]),
+    ...mapState(["colorMap"]),
     getChartDataSets() {
       const localParticipants = this.participants;
       let dataSets = [];
       localParticipants.forEach((participant) => {
-        const participantData = this.participantCreditData(participant);
+        const participantData = this.participantCreditData(
+          participant,
+          this.participants,
+          this.creditType
+        );
         let count = 1;
         participantData.interestRates.forEach((interestRate) => {
           const nameAndIndexerType =
@@ -36,7 +38,8 @@ export default {
           let label = nameAndIndexerType + " - Clientes (1 / 10)";
           let companyColors = this.companyColors(
             participantData.companyName,
-            count++
+            count++,
+            this.colorMap
           );
           let dataSetCustomers = {
             label,
@@ -62,7 +65,7 @@ export default {
       return dataSets;
     },
     getCreditTypeData() {
-      return {
+      const obj = {
         type: "line",
         data: {
           labels: [
@@ -90,11 +93,17 @@ export default {
           },
         },
       };
+      Chart.register(...registerables);
+      return obj;
     },
   },
   methods: {
+    createChart() {
+      const ctx = document.getElementById(this.creditType);
+      new Chart(ctx, this.getCreditTypeData);
+    },
     getIndexerText(interestRate) {
-      const interestRateType = multiplyByIfNumber(interestRate.rate,100);
+      const interestRateType = multiplyByIfNumber(interestRate.rate, 100);
       let text = " - " + interestRate.referentialRateIndexer;
       text +=
         interestRateType === "NA"
@@ -104,8 +113,8 @@ export default {
     },
     getParticipantChartData(interestRate, dataType) {
       let result = [];
-      let minimumRate = 0;
-      let maximumRate = 0;
+      let minimumRate = "0.00";
+      let maximumRate = "0.00";
 
       if (dataType === "indexer") {
         minimumRate = multiplyByIfNumber(interestRate.minimumRate, 100);
@@ -129,10 +138,19 @@ export default {
       result.push(maximumRate);
       return result;
     },
-    companyColors(nameAndIndexerType, length) {
-      let result = this.colorMap.find(
-          (x) => x.nameAndIndexerType === nameAndIndexerType
+    companyColors(nameAndIndexerType, length, colorMap) {
+      let index = colorMap.findIndex(
+        (x) => x.nameAndIndexerType === nameAndIndexerType
       );
+
+      let result =
+        index > -1
+          ? {
+              nameAndIndexerType: colorMap[index].nameAndIndexerType,
+              backgroundColor: colorMap[index].backgroundColor,
+              borderColor: colorMap[index].borderColor,
+            }
+          : undefined;
 
       if (length > 1) {
         result.backgroundColor =
@@ -146,14 +164,14 @@ export default {
     returnThInterestOrClientRate(i) {
       return i % 2 === 0 ? "% Clientes" : "Juros";
     },
-    participantCreditData(participant) {
-      const participantLocal = this.participants.find(
+    participantCreditData(participant, participants, creditType) {
+      const participantLocal = participants.find(
         (x) => x.participantId === participant.participantId
       );
-      return participantLocal.participantCreditData.find(
-        (x) => x.type === this.creditType
+      return participantLocal?.participantCreditData?.find(
+        (x) => x.type === creditType
       );
-    }
+    },
   },
 };
 </script>

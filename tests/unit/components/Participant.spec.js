@@ -2,7 +2,7 @@ import { shallowMount } from "@vue/test-utils";
 import Participant from "@/components/Participant.vue";
 
 describe("Participant.vue", () => {
-  it("renders correct text from props", () => {
+  it("should renders correct text from props", () => {
     const companyName = "Test Company";
     const authorizationServers = ["1", "2"];
     const wrapper = shallowMount(Participant, {

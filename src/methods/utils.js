@@ -2,6 +2,7 @@ export function isInvalidOrEmpty(obj) {
   return (
     obj === null ||
     obj === "undefined" ||
+    obj === undefined ||
     (Array.isArray(obj) && obj.length === 0)
   );
 }
