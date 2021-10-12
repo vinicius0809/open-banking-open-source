@@ -7,21 +7,22 @@
 
 <script>
 import {Chart, registerables} from "chart.js";
-
-Chart.register(...registerables);
+import {mapState} from "vuex";
+import {multiplyByIfNumber} from "../../methods/utils";
 
 export default {
   name: "ComparisonChart",
   props: {
     participants: Array,
-    creditType: String,
-    colorMap: Array,
+    creditType: String
   },
   mounted() {
     const ctx = document.getElementById(this.creditType);
+    Chart.register(...registerables);
     new Chart(ctx, this.getCreditTypeData);
   },
   computed: {
+      ...mapState(["colorMap"]),
     getChartDataSets() {
       const localParticipants = this.participants;
       let dataSets = [];
@@ -93,7 +94,7 @@ export default {
   },
   methods: {
     getIndexerText(interestRate) {
-      const interestRateType = this.multiplyBy(interestRate.rate,100);
+      const interestRateType = multiplyByIfNumber(interestRate.rate,100);
       let text = " - " + interestRate.referentialRateIndexer;
       text +=
         interestRateType === "NA"
@@ -107,8 +108,8 @@ export default {
       let maximumRate = 0;
 
       if (dataType === "indexer") {
-        minimumRate = this.multiplyBy(interestRate.minimumRate, 100);
-        maximumRate = this.multiplyBy(interestRate.maximumRate, 100);
+        minimumRate = multiplyByIfNumber(interestRate.minimumRate, 100);
+        maximumRate = multiplyByIfNumber(interestRate.maximumRate, 100);
       }
 
       result.push(minimumRate);
@@ -119,9 +120,9 @@ export default {
         )[dataType].rate;
 
         if (dataType === "indexer") {
-          result.push(this.multiplyBy(rate, 100));
+          result.push(multiplyByIfNumber(rate, 100));
         } else {
-          result.push(this.multiplyBy(rate, 10));
+          result.push(multiplyByIfNumber(rate, 10));
         }
       }
 
@@ -152,43 +153,7 @@ export default {
       return participantLocal.participantCreditData.find(
         (x) => x.type === this.creditType
       );
-    },
-    multiplyBy(number, multiply) {
-      return Number.isNaN(Number(number))
-        ? "NA"
-        : (number * multiply).toFixed(2);
-    },
+    }
   },
 };
 </script>
-
-<style>
-.table-data {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.table-data td,
-.table-data th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.table-data tr:hover {
-  background-color: #ddd;
-}
-
-.table-data th {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  background-color: #04aa6d;
-  color: white;
-  text-align: center;
-}
-
-.graph-icon:hover {
-  cursor: pointer;
-  background-color: darkgreen;
-}
-</style>

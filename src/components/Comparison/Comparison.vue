@@ -53,7 +53,6 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
-import { getParticipants } from "../../methods/participants";
 import { getUrlData } from "../../methods/firebaseFunctions";
 import ComparisonViewer from "./ComparisonViewer";
 
@@ -124,15 +123,6 @@ export default {
       });
       return filteredParticipants;
     },
-  },
-  created() {
-    if (
-      this.participants == null ||
-      this.participants === "undefined" ||
-      this.participants.length === 0
-    ) {
-      getParticipants();
-    }
   },
   methods: {
     updateColorMap() {

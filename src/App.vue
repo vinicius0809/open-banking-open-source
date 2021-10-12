@@ -18,8 +18,15 @@
 
 <script>
 import { mapState } from "vuex";
+import {isInvalidOrEmpty} from "./methods/utils";
+import {getParticipants} from "./methods/participants";
 export default {
-  computed: mapState(["loading"]),
+  computed: mapState(["loading","participants"]),
+  async created() {
+    if (isInvalidOrEmpty(this.participants)) {
+      await getParticipants();
+    }
+  }
 };
 </script>
 

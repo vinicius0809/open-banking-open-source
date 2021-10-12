@@ -19,7 +19,6 @@
 <script>
 import Participant from "@/components/Participant.vue";
 import { mapActions, mapState } from "vuex";
-import { getParticipants } from "../methods/participants.js";
 
 export default {
   name: "ListParticipants",
@@ -46,15 +45,6 @@ export default {
       return result;
     },
   },
-  created() {
-    if (
-      this.participants == null ||
-      this.participants === "undefined" ||
-      this.participants.length === 0
-    ) {
-      getParticipants();
-    }
-  },
   methods: {
     ...mapActions(["startLoading", "stopLoading", "setParticipants"]),
     participantDetails(participant) {
@@ -69,8 +59,6 @@ export default {
   },
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 h3 {
   margin: 40px 0 0;

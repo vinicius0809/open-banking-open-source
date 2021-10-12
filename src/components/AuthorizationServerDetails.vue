@@ -1,115 +1,89 @@
 <template>
   <div class="authorization-server">
-    <div class="company-present">
-      <img
-        :src="authorizationServer.CustomerFriendlyLogoUri"
-        alt="logo"
-        class="logo"
-      />
-      <h1 class="title">{{ authorizationServer.CustomerFriendlyName }}</h1>
-    </div>
-    <p>{{ authorizationServer.CustomerFriendlyDescription }}</p>
-    <div class="title"><strong>Id: </strong>{{ authorizationServerId }}</div>
-    <hr />
-    <strong> API Resources:</strong>
-    {{ authorizationServer.ApiResources.length }}
-    <div class="api-resources">
-      <button
-        v-for="apiResource in authorizationServer.ApiResources"
-        :key="apiResource.ApiResourceId"
-        :class="getApiResourceClasses(apiResource.ApiResourceId)"
-        @click="showDetails(apiResource)"
-      >
-        {{ apiResource.ApiFamilyType }}
-        - v{{ apiResource.ApiVersion }}
-      </button>
-    </div>
-    <hr />
-    <div class="api-resources-details" v-if="showingDetails">
-      <div
-        v-for="discoveryEndpoint in selectedApiResource.ApiDiscoveryEndpoints"
-        :key="discoveryEndpoint.ApiDiscoveryId"
-      >
-        <div v-if="!isPublicEndpoint(discoveryEndpoint.ApiEndpoint)">
-          {{ discoveryEndpoint.ApiEndpoint }}
-        </div>
-        <div v-else>
-          <button
-            v-if="loadingThisData(discoveryEndpoint.ApiEndpoint)"
-            @click="getApiData(discoveryEndpoint.ApiEndpoint)"
-          >
-            {{ discoveryEndpoint.ApiEndpoint }}
-          </button>
-          <DataDetails
-            v-if="shouldShowThisData(discoveryEndpoint.ApiEndpoint)"
-            :urlData="selectedApiData"
-          />
-        </div>
+    <template v-if="participantsLoaded">
+      <div class="company-present">
+        <img
+          :src="authorizationServer.CustomerFriendlyLogoUri"
+          alt="logo"
+          class="logo"
+        />
+        <h1 class="title">{{ authorizationServer.CustomerFriendlyName }}</h1>
       </div>
-    </div>
+      <p>{{ authorizationServer.CustomerFriendlyDescription }}</p>
+      <div class="title"><strong>Id: </strong>{{ authorizationServerId }}</div>
+      <hr />
+      <strong> API Resources:</strong>
+      {{ authorizationServer.ApiResources.length }}
+      <div class="api-resources">
+        <button
+          v-for="apiResource in authorizationServer.ApiResources"
+          :key="apiResource.ApiResourceId"
+          :class="getApiResourceClasses(apiResource.ApiResourceId)"
+          @click="showDetails(apiResource)"
+        >
+          {{ apiResource.ApiFamilyType }}
+          - v{{ apiResource.ApiVersion }}
+        </button>
+      </div>
+      <hr />
+      <div class="api-resources-details" v-if="showingDetails">
+        <div
+          v-for="discoveryEndpoint in selectedApiResource.ApiDiscoveryEndpoints"
+          :key="discoveryEndpoint.ApiDiscoveryId"
+        >
+          <div>
+            {{ discoveryEndpoint.ApiEndpoint }}
+          </div>
+        </div>
+      </div></template
+    >
   </div>
 </template>
 
 <script>
-// import AuthorizationServer from "@/components/AuthorizationServer.vue";
-// import axios from "axios";
-import { FUNCTIONS } from "../firebase/app";
 import { mapActions, mapState } from "vuex";
-import DataDetails from "@/components/DataDetails.vue";
-import { getParticipants } from "@/methods/participants.js";
 export default {
   props: {
     participantId: String,
     authorizationServerId: String,
   },
-  components: {
-    DataDetails,
-  },
   computed: {
-    ...mapState(["loading","participants"]),
+    ...mapState(["loading", "participants", "participantsLoaded"]),
     showingDetails() {
       return this.isShowingDetails;
     },
+    authorizationServer() {
+      let result = undefined;
+      if (this.participantsLoaded) {
+        result = this.participant.AuthorisationServers.find(
+          (as) => as.AuthorisationServerId === this.authorizationServerId
+        );
+      }
+      return result;
+    },
+    participant() {
+      let result = undefined;
+      if (this.participantsLoaded) {
+        result = this.participants.find(
+          (el) => el.RegistrationId === this.participantId
+        );
+      }
+      return result;
+    },
   },
   methods: {
-    loadingThisData(url) {
-      return !this.loading || (this.loading && this.selectedApiDataUrl == url);
-    },
-    shouldShowThisData(url) {
-      return (
-        this.selectedApiData != null &&
-        this.selectedApiData != "undefined" &&
-        this.selectedApiDataUrl == url
-      );
-    },
     ...mapActions(["startLoading", "stopLoading"]),
     showDetails(apiResource) {
       this.isShowingDetails = true;
       this.selectedApiResource = apiResource;
     },
-    isPublicEndpoint(endpoint) {
-      return (
-        endpoint.indexOf("products-services") > -1 ||
-        endpoint.indexOf("channels") > -1
-      );
-    },
     getApiResourceClasses(resourceId) {
       const selectedClass =
-        resourceId == this.selectedApiResource.ApiResourceId ? " selected" : "";
+        resourceId === this.selectedApiResource.ApiResourceId
+          ? " selected"
+          : "";
       return "api-resource-item" + selectedClass;
-    },
-    getApiData(url) {
-      this.startLoading();
-      const getUrlData = FUNCTIONS.httpsCallable("getUrlData");
-      let data = { url };
-      getUrlData(data)
-        .then((response) => {
-          this.selectedApiData = response;
-          this.selectedApiDataUrl = url;
-        })
-        .catch((error) => alert(error.message))
-        .finally(() => this.stopLoading());
-    },
+    }
   },
   data() {
     return {
@@ -117,37 +91,7 @@ export default {
       selectedApiResource: {},
       selectedApiData: {},
       selectedApiDataUrl: "",
-      participant: null,
-      authorizationServer: null,
     };
-  },
-  async created() {
-    if (
-      this.participants == null ||
-      this.participants == "undefined" ||
-      this.participants.length == 0
-    ) {
-      await getParticipants();
-    }
-
-    if (this.participant == null || this.participant == "undefined") {
-      this.participants.forEach((element) => {
-        if (element.RegistrationId == this.participantId) {
-          this.participant = element;
-        }
-      });
-    }
-
-    if (
-      this.authorizationServer == null ||
-      this.authorizationServer == "undefined"
-    ) {
-      this.participant.AuthorisationServers.forEach((element) => {
-        if (element.AuthorisationServerId == this.authorizationServerId) {
-          this.authorizationServer = element;
-        }
-      });
-    }
   }
 };
 </script>
@@ -176,13 +120,17 @@ export default {
   flex-wrap: wrap;
 }
 .logo {
-  flex-grow: 1;
   align-content: center;
   align-self: center;
+  flex-grow:1;
 }
 .title {
   flex-grow: 1;
   align-content: center;
   align-self: center;
+}
+.logo {
+  width: 500px;
+  height: 500px;
 }
 </style>

@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import {multiplyByIfNumber} from "../../methods/utils";
+
 export default {
   name: "ComparisonTable",
   props: {
@@ -115,9 +117,9 @@ export default {
       return result;
     },
     formatToPercentage(number) {
-      return Number.isNaN(Number(number))
-        ? "NA"
-        : (number * 100).toFixed(2) + "%";
+      let result = multiplyByIfNumber(number, 100);
+      result += result === "NA" ? "" : "%";
+      return result;
     },
   },
 };

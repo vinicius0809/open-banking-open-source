@@ -8,6 +8,7 @@ export default new Vuex.Store({
     loading: false,
     participants: [],
     colorMap: [],
+    participantsLoaded: false,
   },
   mutations: {
     updateState(state, obj) {
@@ -25,6 +26,10 @@ export default new Vuex.Store({
       context.commit("updateState", {
         property: "participants",
         value: participants,
+      });
+      context.commit("updateState", {
+        property: "participantsLoaded",
+        value: true,
       });
     },
     setColorMap(context, colorMap) {

@@ -29,10 +29,7 @@
 export default {
   props: {
     authorizationServer: Object,
-  },
-  data() {
-    return {};
-  },
+  }
 };
 </script>
 
@@ -48,5 +45,9 @@ export default {
 .authorization-server:hover {
   cursor: pointer;
   background-color: darkgray;
+}
+.logo {
+  width: 250px;
+  height: 250px;
 }
 </style>
