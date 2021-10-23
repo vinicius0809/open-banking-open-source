@@ -1,30 +1,38 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-// const cors = require('cors')({ origin: true });
-const axios = require('axios');
+const axios = require("axios");
 admin.initializeApp();
 const regionFunctions = functions
-    .runWith({ timeoutSeconds: 60, memory: "128MB" })
-    .region("southamerica-east1").https;
+  .runWith({ timeoutSeconds: 60, memory: "128MB" })
+  .region("southamerica-east1").https;
 
 exports.getUrlData = regionFunctions.onCall(async (data) => {
-    let getData = {};
-    // res.set('Access-Control-Allow-Origin', '*');
-    functions.logger.info("Chamando URL: " + data.url);
-    await axios.get(data.url)
-        .then(result => {
-            getData = { message: "sucesso ao buscar", data: result, msgStatus: "success" }
-        })
-        .catch(error => {
-            getData = { message: error.message, msgStatus: "error", data: "sem resposta"}
-        })
-        .finally(() => {
-            functions.logger.info(getData);
-        });
+  let getData = {};
+  functions.logger.info("Chamando URL: " + data.url);
+  await axios
+    .get(data.url)
+    .then((result) => {
+      getData = {
+        message: "sucesso ao buscar",
+        data: result,
+        msgStatus: "success",
+      };
+    })
+    .catch((error) => {
+      getData = {
+        message: error.message,
+        msgStatus: "error",
+        data: "sem resposta",
+      };
+    })
+    .finally(() => {
+      functions.logger.info(getData);
+    });
 
-    return getData.data.data;
+  return getData.data.data;
 });
 
+/*
 exports.updateParticipants = regionFunctions.onCall(
     async (data) => {
         functions.logger.info(data);
@@ -64,66 +72,4 @@ exports.updateParticipants = regionFunctions.onCall(
             return msg;
         }
     });
-
-exports.getParticipants = regionFunctions.onCall(async (data, context) => {
-    functions.logger.info("Chamada recebida => ", data, context);
-    const participantsRef = admin.firestore().collection("participants");
-    let participants = [];
-    let message = "Erro ao buscar participantes!"
-
-    await participantsRef
-        .orderBy("insertDate", "desc")
-        .limit(1)
-        .get()
-        .then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                functions.logger.info("Doc.data() =>" + doc.data());
-                participants = doc.data().data;
-            });
-            message = "Sucesso ao obter participantes!"
-        })
-        .catch((error) => {
-            functions.logger.info(error.message);
-            throw new functions.https.HttpsError('unknown', error.message, error);
-        })
-        .finally(() => {
-            functions.logger.info(message);
-            functions.logger.info(participants);
-        });
-
-    return participants;
-});
-
-// exports.updatePage = regionFunctions.onCall(async (data, context) => {
-//     const baseURI = String.toString(data);
-
-//     return new Promise((resolve, reject) => {
-//         const request = https.get((baseURI, (res) => {
-//             res.on('data', (d) => {
-//                 functions.logger.info("Teste do logs!");
-//                 functions.logger.info(d);
-//                 return "funciona!"
-//             });
-//             res.on('end', resolve);
-//         }));
-//         request.on('error', reject);
-//     });
-// });
-
-// exports.test = regionFunctions.onRequest((request, response) => {
-//     const baseURI = 'https://api.itau/open-banking/products-services/v1/personal-accounts'
-//     this.$http.get(baseURI)
-//         .then((result) => {
-//             functions.logger.info("Teste do logs!");
-//             functions.logger.info(result.data);
-//             response.send(result.data);
-//         })
-// })
-
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+*/
