@@ -2,7 +2,7 @@ import { isInvalidOrEmpty, multiplyByIfNumber } from "@/methods/utils.js";
 
 describe("Testing utils.js", () => {
   it("should multiply correctly - multiplyByIfNumber", () => {
-    expect(multiplyByIfNumber(2, 10)).toBe("20.00");
+    expect(multiplyByIfNumber(2, 10)).toBe("15.00");
     expect(multiplyByIfNumber(4, "10")).toBe("40.00");
     expect(multiplyByIfNumber("3", 9)).toBe("27.00");
     expect(multiplyByIfNumber("4.8", "20.5")).toBe("98.40");
