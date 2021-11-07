@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import {Chart, registerables} from "chart.js";
+import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
 
@@ -19,7 +19,7 @@ export default {
   },
   mounted() {
     const ctx = document.getElementById(this.creditType);
-    new Chart(ctx, this.getCreditTypeData);
+    console.log(new Chart(ctx, this.getCreditTypeData));
   },
   computed: {
     getChartDataSets() {
@@ -32,7 +32,7 @@ export default {
           const nameAndIndexerType =
             participantData.companyName + this.getIndexerText(interestRate);
 
-          let label = nameAndIndexerType + " - Clientes (1 / 10)";
+          let label = nameAndIndexerType + " - % Clientes";
           let companyColors = this.companyColors(
             participantData.companyName,
             count++
@@ -44,8 +44,9 @@ export default {
             borderWidth: 3,
             type: "bar",
             order: 2,
+            yAxisID: "customers",
           };
-          label = nameAndIndexerType + " - Juros (% mensal)";
+          label = nameAndIndexerType + " - % Juros mensal";
           let dataSetInterest = {
             label,
             data: this.getParticipantChartData(interestRate, "indexer"),
@@ -54,6 +55,8 @@ export default {
             borderWidth: 3,
             type: "line",
             order: 1,
+            yAxisId: "interest",
+            lineTension: 0
           };
           dataSets.push(dataSetInterest, dataSetCustomers);
         });
@@ -62,7 +65,6 @@ export default {
     },
     getCreditTypeData() {
       return {
-        type: "line",
         data: {
           labels: [
             "Mínimo",
@@ -78,14 +80,28 @@ export default {
           responsive: true,
           lineTension: 1,
           scales: {
-            yAxes: [
-              {
-                ticks: {
-                  beginAtZero: true,
-                  padding: 25,
-                },
+            interest: {
+              type:"linear",
+              ticks: {
+                beginAtZero: true,
               },
-            ],
+              position: "left",
+              title:{
+                display: true,
+                text: "% Juros"
+              }
+            },
+            customers: {
+              type: "linear",
+              ticks: {
+                beginAtZero: true,
+              },
+              position: "right",
+              title:{
+                display: true,
+                text: "% Clientes"
+              }
+            },
           },
         },
       };
@@ -93,7 +109,7 @@ export default {
   },
   methods: {
     getIndexerText(interestRate) {
-      const interestRateType = this.multiplyBy(interestRate.rate,100);
+      const interestRateType = this.multiplyBy(interestRate.rate, 100);
       let text = " - " + interestRate.referentialRateIndexer;
       text +=
         interestRateType === "NA"
@@ -118,11 +134,7 @@ export default {
           (x) => x.interval.indexOf(i) > -1
         )[dataType].rate;
 
-        if (dataType === "indexer") {
-          result.push(this.multiplyBy(rate, 100));
-        } else {
-          result.push(this.multiplyBy(rate, 10));
-        }
+        result.push(this.multiplyBy(rate, 100));
       }
 
       result.push(maximumRate);
@@ -130,7 +142,7 @@ export default {
     },
     companyColors(nameAndIndexerType, length) {
       let result = this.colorMap.find(
-          (x) => x.nameAndIndexerType === nameAndIndexerType
+        (x) => x.nameAndIndexerType === nameAndIndexerType
       );
 
       if (length > 1) {
@@ -161,34 +173,3 @@ export default {
   },
 };
 </script>
-
-<style>
-.table-data {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.table-data td,
-.table-data th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.table-data tr:hover {
-  background-color: #ddd;
-}
-
-.table-data th {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  background-color: #04aa6d;
-  color: white;
-  text-align: center;
-}
-
-.graph-icon:hover {
-  cursor: pointer;
-  background-color: darkgreen;
-}
-</style>
