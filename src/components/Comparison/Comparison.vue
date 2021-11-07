@@ -21,7 +21,6 @@
         <option value="loan">Empréstimo</option>
         <option value="financing">Financiamento</option>
         <option value="invoice-financing">Antecipação de Recebíveis</option>
-        <option value="credit-card">Cartão de Crédito</option>
       </select>
       <label v-if="creditTypesSelected.length > 0" class="checkbox">
         <input type="checkbox" v-model="graphView" />Visualização em
@@ -76,10 +75,15 @@ export default {
     comparisonParticipants() {
       return this.participantsLocal.filter((x) => x.toCompare);
     },
+    participantsWithoutSubCompanies() {
+      return this.participants.filter(
+        (x) => x.ParentOrganisationReference === ""
+      );
+    },
     ...mapState(["participants"]),
     participantsWithThisCreditType() {
       let filteredParticipants = [];
-      this.participants.forEach((participant) => {
+      this.participantsWithoutSubCompanies.forEach((participant) => {
         participant.AuthorisationServers.forEach((authorizationServer) => {
           authorizationServer.ApiResources.forEach((apiResource) => {
             if (apiResource.ApiFamilyType === "products-services") {
@@ -92,30 +96,11 @@ export default {
                     this.filterPersonType
                   )
                 ) {
-                  let position = this.participantsLocal.findIndex(
-                    (x) => x.participantName === participant.RegisteredName
+                  filteredParticipants = this.updateFilteredParticipants(
+                    participant,
+                    endpoint,
+                    filteredParticipants
                   );
-                  if (position === -1) {
-                    this.participantsLocal.push({
-                      participantName: participant.RegisteredName,
-                      participantId: participant.RegistrationId,
-                      participantUrls: [],
-                      toCompare: false,
-                      participantCreditTypes: [],
-                      participantCreditData: [],
-                    });
-                  }
-                  position = this.participantsLocal.findIndex(
-                    (x) => x.participantName === participant.RegisteredName
-                  );
-                  this.participantsLocal[position].participantUrls.push({
-                    url: endpoint.ApiEndpoint,
-                    data: {},
-                  });
-
-                  if (filteredParticipants.indexOf(participant) === -1) {
-                    filteredParticipants.push(participant);
-                  }
                 }
               });
             }
@@ -135,6 +120,33 @@ export default {
     }
   },
   methods: {
+    updateFilteredParticipants(participant, endpoint, filteredParticipants) {
+      let position = this.participantsLocal.findIndex(
+        (x) => x.participantName === participant.RegisteredName
+      );
+      if (position === -1) {
+        this.participantsLocal.push({
+          participantName: participant.RegisteredName,
+          participantId: participant.RegistrationId,
+          participantUrls: [],
+          toCompare: false,
+          participantCreditTypes: [],
+          participantCreditData: [],
+        });
+      }
+      position = this.participantsLocal.findIndex(
+        (x) => x.participantName === participant.RegisteredName
+      );
+      this.participantsLocal[position].participantUrls.push({
+        url: endpoint.ApiEndpoint,
+        data: {},
+      });
+
+      if (filteredParticipants.indexOf(participant) === -1) {
+        filteredParticipants.push(participant);
+      }
+      return filteredParticipants;
+    },
     updateColorMap() {
       let colorMap = [];
       this.comparisonParticipants.forEach((participant) => {
@@ -229,8 +241,8 @@ export default {
           !this.participantsLocal[positionInParticipantsLocal].toCompare;
       }
       if (this.comparisonParticipants.length > 0) {
-        this.comparisonParticipants.forEach((participant) => {
-          participant.participantUrls.forEach(async (obj) => {
+        this.comparisonParticipants.forEach((p) => {
+          p.participantUrls.forEach(async (obj) => {
             if (
               this.filterPersonType === "both" ||
               obj.url.indexOf(this.filterPersonType) > -1
