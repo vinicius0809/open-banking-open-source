@@ -35,7 +35,7 @@ export default {
           const nameAndIndexerType =
             participantData.companyName + this.getIndexerText(interestRate);
 
-          let label = nameAndIndexerType + " - Clientes (1 / 10)";
+          let label = nameAndIndexerType + " - % Clientes";
           let companyColors = this.companyColors(
             participantData.companyName,
             count++,
@@ -48,8 +48,9 @@ export default {
             borderWidth: 3,
             type: "bar",
             order: 2,
+            yAxisID: "customers",
           };
-          label = nameAndIndexerType + " - Juros (% mensal)";
+          label = nameAndIndexerType + " - % Juros mensal";
           let dataSetInterest = {
             label,
             data: this.getParticipantChartData(interestRate, "indexer"),
@@ -58,6 +59,8 @@ export default {
             borderWidth: 3,
             type: "line",
             order: 1,
+            yAxisId: "interest",
+            lineTension: 0
           };
           dataSets.push(dataSetInterest, dataSetCustomers);
         });
@@ -66,7 +69,6 @@ export default {
     },
     getCreditTypeData() {
       const obj = {
-        type: "line",
         data: {
           labels: [
             "Mínimo",
@@ -82,14 +84,28 @@ export default {
           responsive: true,
           lineTension: 1,
           scales: {
-            yAxes: [
-              {
-                ticks: {
-                  beginAtZero: true,
-                  padding: 25,
-                },
+            interest: {
+              type:"linear",
+              ticks: {
+                beginAtZero: true,
               },
-            ],
+              position: "left",
+              title:{
+                display: true,
+                text: "% Juros"
+              }
+            },
+            customers: {
+              type: "linear",
+              ticks: {
+                beginAtZero: true,
+              },
+              position: "right",
+              title:{
+                display: true,
+                text: "% Clientes"
+              }
+            },
           },
         },
       };
@@ -128,11 +144,7 @@ export default {
           (x) => x.interval.indexOf(i) > -1
         )[dataType].rate;
 
-        if (dataType === "indexer") {
-          result.push(multiplyByIfNumber(rate, 100));
-        } else {
-          result.push(multiplyByIfNumber(rate, 10));
-        }
+        result.push(this.multiplyBy(rate, 100));
       }
 
       result.push(maximumRate);
