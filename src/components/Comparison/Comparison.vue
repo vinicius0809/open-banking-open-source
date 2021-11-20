@@ -75,7 +75,8 @@ export default {
       return this.participantsLocal.filter((x) => x.toCompare);
     },
     participantsWithoutSubCompanies() {
-      return this.participants.filter(
+      return this.participants
+          .filter(
         (x) => x.ParentOrganisationReference === ""
       );
     },

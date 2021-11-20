@@ -8,8 +8,8 @@ describe("Testing utils.js", () => {
     expect(multiplyByIfNumber("4.8", "20.5")).toBe("98.40");
   });
   it("should return NA with parameter NaN - multiplyByIfNumber", () => {
-    const value = multiplyByIfNumber("test", 10);
-    expect(value).toBe("NA");
+    expect(multiplyByIfNumber("test", 10)).toBe("NA");
+    expect(multiplyByIfNumber(null, 10)).toBe("NA");
   });
   it("should return true - isInvalidOrEmpty", () => {
     expect(isInvalidOrEmpty(null)).toBeTruthy();

@@ -5,7 +5,7 @@
     </div>
     <hr />
     <div class="authorization-servers-count">
-      Authorization Servers: {{ authorizationServers.length}}
+      Empresas: {{ authorizationServers.length}}
     </div>
   </div>
 </template>

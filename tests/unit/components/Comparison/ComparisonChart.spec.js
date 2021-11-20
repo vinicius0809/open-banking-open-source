@@ -48,7 +48,7 @@ describe("ComparisonChart.vue", () => {
     expect(typeTests[2].backgroundColor === whiteColor).toBeFalsy();
     expect(typeTests[2].borderColor === whiteColor).toBeFalsy();
   });
-  it("should return proper response to companyColors calls - participantCreditData", () => {
+  it("should return proper response to participantCreditData calls - participantCreditData", () => {
     const creditDatas = [
       [
         { type: "loan", someValue: "1" },
@@ -161,7 +161,14 @@ describe("ComparisonChart.vue", () => {
       maximumRate: "0.1399",
     };
     const expectedIndexer = ["0.30", "3.00", "7.00", "7.50", "13.50", "13.99"];
-    const expectedCustomers = ["0.00", "0.02", "0.03", "2.50", "7.45", "0.00"];
+    const expectedCustomers = [
+      "0.00",
+      "0.20",
+      "0.30",
+      "25.00",
+      "74.50",
+      "0.00",
+    ];
     const resultIndexer = wrapper.vm.getParticipantChartData(
       interestRate,
       "indexer"
@@ -177,5 +184,140 @@ describe("ComparisonChart.vue", () => {
     for (let i = 0; i < expectedCustomers.length; i++) {
       expect(resultCustomers[i]).toBe(expectedCustomers[i]);
     }
+  });
+  it("should return correct data - getDataSetCustomers", () => {
+    const label = "Label 1";
+    const interestRate = {
+      referentialRateIndexer: "PRE_FIXADO",
+      rate: "N/A",
+      applications: [
+        {
+          interval: "1_FAIXA",
+          indexer: { rate: "0.03" },
+          customers: { rate: "0.0020" },
+        },
+        {
+          interval: "2_FAIXA",
+          indexer: { rate: "0.07" },
+          customers: { rate: "0.0030" },
+        },
+        {
+          interval: "3_FAIXA",
+          indexer: { rate: "0.075" },
+          customers: { rate: "0.25" },
+        },
+        {
+          interval: "4_FAIXA",
+          indexer: { rate: "0.1350" },
+          customers: { rate: "0.7450" },
+        },
+      ],
+      minimumRate: "0.003",
+      maximumRate: "0.1399",
+    };
+    const companyColors = { backgroundColor: "blue", borderColor: "red" };
+
+    const result = wrapper.vm.getDataSetCustomers(
+      label,
+      interestRate,
+      companyColors
+    );
+    expect(result.label).toBe(label);
+    expect(result.type).toBe("bar");
+    expect(result.order).toBe(2);
+    expect(result.yAxisId).toBe("customers");
+    expect(result.backgroundColor).toBe("blue");
+    expect(result.borderColor).toBe(undefined);
+  });
+  it("should return correct data - getDataSetInterest", () => {
+    const label = "Label 1";
+    const interestRate = {
+      referentialRateIndexer: "PRE_FIXADO",
+      rate: "N/A",
+      applications: [
+        {
+          interval: "1_FAIXA",
+          indexer: { rate: "0.03" },
+          customers: { rate: "0.0020" },
+        },
+        {
+          interval: "2_FAIXA",
+          indexer: { rate: "0.07" },
+          customers: { rate: "0.0030" },
+        },
+        {
+          interval: "3_FAIXA",
+          indexer: { rate: "0.075" },
+          customers: { rate: "0.25" },
+        },
+        {
+          interval: "4_FAIXA",
+          indexer: { rate: "0.1350" },
+          customers: { rate: "0.7450" },
+        },
+      ],
+      minimumRate: "0.003",
+      maximumRate: "0.1399",
+    };
+    const companyColors = { backgroundColor: "blue", borderColor: "red" };
+
+    const result = wrapper.vm.getDataSetInterest(
+      label,
+      interestRate,
+      companyColors
+    );
+    expect(result.label).toBe(label);
+    expect(result.type).toBe("line");
+    expect(result.order).toBe(1);
+    expect(result.yAxisId).toBe("interest");
+    expect(result.backgroundColor).toBe("blue");
+    expect(result.borderColor).toBe("red");
+  });
+  it("should return correct data - fillDataSets", () => {
+    const participantData = { companyName: "Test Company" };
+    const interestRate = {
+      referentialRateIndexer: "PRE_FIXADO",
+      rate: "N/A",
+      applications: [
+        {
+          interval: "1_FAIXA",
+          indexer: { rate: "0.03" },
+          customers: { rate: "0.0020" },
+        },
+        {
+          interval: "2_FAIXA",
+          indexer: { rate: "0.07" },
+          customers: { rate: "0.0030" },
+        },
+        {
+          interval: "3_FAIXA",
+          indexer: { rate: "0.075" },
+          customers: { rate: "0.25" },
+        },
+        {
+          interval: "4_FAIXA",
+          indexer: { rate: "0.1350" },
+          customers: { rate: "0.7450" },
+        },
+      ],
+      minimumRate: "0.003",
+      maximumRate: "0.1399",
+    };
+    const colorMap = [
+      {
+        nameAndIndexerType: participantData.companyName,
+        backgroundColor: "whiteColor",
+        borderColor: "whiteColor",
+      },
+    ];
+
+    let dataSets = wrapper.vm.fillDataSets(
+      [],
+      participantData,
+      interestRate,
+      1,
+      colorMap
+    );
+    expect(dataSets).toBeDefined();
   });
 });

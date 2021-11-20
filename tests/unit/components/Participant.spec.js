@@ -10,8 +10,6 @@ describe("Participant.vue", () => {
     });
     const text = wrapper.text();
     expect(text).toContain(companyName);
-    expect(text).toContain(
-      "Authorization Servers: " + authorizationServers.length
-    );
+    expect(text).toContain("Empresas: " + authorizationServers.length);
   });
 });

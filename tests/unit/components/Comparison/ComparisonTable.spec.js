@@ -1,181 +1,109 @@
 import { shallowMount } from "@vue/test-utils";
-import ComparisonChart from "@/components/Comparison/ComparisonChart.vue";
+import ComparisonTable from "@/components/Comparison/ComparisonTable.vue";
 
-describe("ComparisonChart.vue", () => {
-  const wrapper = shallowMount(ComparisonChart, {
-    methods: {
-      // replacing createChart() method because of mounted lifecycle
-      createChart: jest.fn(),
-    },
-  });
+describe("ComparisonTable.vue", () => {
+  const wrapper = shallowMount(ComparisonTable);
   it("should renders correct text from parameters - returnThInterestOrClientRate", () => {
     expect(wrapper.vm.returnThInterestOrClientRate(4)).toBe("% Clientes");
     expect(wrapper.vm.returnThInterestOrClientRate(5)).toBe("Juros");
     expect(wrapper.vm.returnThInterestOrClientRate(2)).toBe("% Clientes");
     expect(wrapper.vm.returnThInterestOrClientRate(3)).toBe("Juros");
   });
-  it("should renders correct text from parameters - getIndexerText", () => {
-    const cdi = "FLUTUANTES_CDI";
-    const prefix = "PRE_FIXADO";
-    const interestRate1 = { rate: 0.089, referentialRateIndexer: cdi };
-    const interestRate2 = { rate: 1.0, referentialRateIndexer: cdi };
-    const interestRate3 = { rate: "NA", referentialRateIndexer: prefix };
-    expect(wrapper.vm.getIndexerText(interestRate1)).toBe(
-      " - FLUTUANTES_CDI / 8%"
-    );
-    expect(wrapper.vm.getIndexerText(interestRate2)).toBe(
-      " - FLUTUANTES_CDI / 100%"
-    );
-    expect(wrapper.vm.getIndexerText(interestRate3)).toBe(" - " + prefix);
+  it("should renders correct text from parameters - formatToPercentage", () => {
+    expect(wrapper.vm.formatToPercentage(4)).toBe("400.00%");
+    expect(wrapper.vm.formatToPercentage("4")).toBe("400.00%");
+    expect(wrapper.vm.formatToPercentage("0.03")).toBe("3.00%");
+    expect(wrapper.vm.formatToPercentage(0.0048)).toBe("0.48%");
+    expect(wrapper.vm.formatToPercentage("asd")).toBe("NA");
+    expect(wrapper.vm.formatToPercentage(null)).toBe("NA");
   });
-  it("should return proper response to companyColors calls - companyColors", () => {
-    const nameAndIndexerType = "Company Test";
-    const whiteColor = "#FFFFFF";
-    const objColorMap = {
-      nameAndIndexerType,
-      backgroundColor: whiteColor,
-      borderColor: whiteColor,
-    };
-    const colorMap = [objColorMap];
-    const typeTests = [
-      wrapper.vm.companyColors(nameAndIndexerType, 1, colorMap),
-      wrapper.vm.companyColors("Another Company", 1, colorMap),
-      wrapper.vm.companyColors(nameAndIndexerType, 2, colorMap),
+  it("should return correct data - participantCreditData", () => {
+    const testParticipants = [
+      { participantId: "0" },
+      { participantId: "1" },
+      { participantId: "2" },
     ];
-    expect(typeTests[0].backgroundColor).toBe(whiteColor);
-    expect(typeTests[0].borderColor).toBe(whiteColor);
-    expect(typeTests[1]).toBe(undefined);
-    expect(typeTests[2].backgroundColor === whiteColor).toBeFalsy();
-    expect(typeTests[2].borderColor === whiteColor).toBeFalsy();
+    const participantsToFind = [
+      { participantId: "0", participantCreditData: [{ type: "loan" }] },
+      { participantId: "1", participantCreditData: [{ type: "financing" }] },
+      { participantId: "2" },
+    ];
+
+    expect(
+      wrapper.vm.participantCreditData(
+        testParticipants[0],
+        participantsToFind,
+        "loan"
+      )
+    ).toBeDefined();
+    expect(
+      wrapper.vm.participantCreditData(
+        testParticipants[1],
+        participantsToFind,
+        "loan"
+      )
+    ).toBeUndefined();
+    expect(() => {
+      wrapper.vm.participantCreditData(
+        testParticipants[2],
+        participantsToFind,
+        "anything"
+      );
+    }).toThrow(TypeError);
   });
-  it("should return proper response to companyColors calls - participantCreditData", () => {
-    const creditDatas = [
-      [
-        { type: "loan", someValue: "1" },
-        { type: "financing", someValue: "1" },
-      ],
-      [
-        { type: "financing", someValue: "2" },
-        { type: "loan", someValue: "2" },
-      ],
-      [
-        { type: "financing", someValue: "3" },
-        { type: "loan", someValue: "3" },
-      ],
-      [
-        { type: "loan", someValue: "3" },
-        { type: "financing", someValue: "3" },
-      ],
-      [
-        { type: "loan", someValue: "4" },
-        { type: "financing", someValue: "4" },
-      ],
-    ];
-    const participant1 = {
-      participantCreditData: creditDatas[0],
-      participantId: "1",
-    };
-    const participant2 = {
-      participantCreditData: creditDatas[1],
-      participantId: "2",
-    };
-    const participant3 = {
-      participantCreditData: creditDatas[2],
-      participantId: "3",
-    };
-    const participant4 = {
-      participantCreditData: creditDatas[3],
-      participantId: "4",
-    };
-    const participant5 = {
-      participantCreditData: creditDatas[4],
-      participantId: "5",
-    };
-    const participants = [
-      participant1,
-      participant2,
-      participant3,
-      participant4,
-    ];
-    const creditTypes = ["loan", "financing", "other"];
-    const typeTests = [
-      wrapper.vm.participantCreditData(
-        participant1,
-        participants,
-        creditTypes[0]
-      ),
-      wrapper.vm.participantCreditData(
-        participant2,
-        participants,
-        creditTypes[1]
-      ),
-      wrapper.vm.participantCreditData(
-        participant3,
-        participants,
-        creditTypes[2]
-      ),
-      wrapper.vm.participantCreditData(
-        participant4,
-        participants,
-        creditTypes[0]
-      ),
-      wrapper.vm.participantCreditData(
-        participant5,
-        participants,
-        creditTypes[0]
-      ),
-    ];
-    expect(typeTests[0]).toBe(creditDatas[0][0]);
-    expect(typeTests[1]).toBe(creditDatas[1][0]);
-    expect(typeTests[2]).toBe(undefined);
-    expect(typeTests[3]).toBe(creditDatas[3][0]);
-    expect(typeTests[4]).toBe(undefined);
-  });
-  it("should return correct data - getParticipantChartData", () => {
+  it("should return correct data - generateTdData", () => {
     const interestRate = {
-      referentialRateIndexer: "PRE_FIXADO",
-      rate: "N/A",
+      minimumRate: 0.005,
+      maximumRate: 0.05,
+      rate: 1,
+      referentialRateIndexer: "FLUTUANTES_CDI",
       applications: [
         {
-          interval: "1_FAIXA",
-          indexer: { rate: "0.03" },
-          customers: { rate: "0.0020" },
+          interval: "FAIXA_1",
+          indexer: { rate: 0.01 },
+          customers: { rate: 0.011 },
         },
         {
-          interval: "2_FAIXA",
-          indexer: { rate: "0.07" },
-          customers: { rate: "0.0030" },
+          interval: "FAIXA_2",
+          indexer: { rate: 0.02 },
+          customers: { rate: 0.022 },
         },
         {
-          interval: "3_FAIXA",
-          indexer: { rate: "0.075" },
-          customers: { rate: "0.25" },
+          interval: "FAIXA_3",
+          indexer: { rate: 0.03 },
+          customers: { rate: 0.033 },
         },
         {
-          interval: "4_FAIXA",
-          indexer: { rate: "0.1350" },
-          customers: { rate: "0.7450" },
+          interval: "FAIXA_4",
+          indexer: { rate: 0.04 },
+          customers: { rate: 0.044 },
         },
       ],
-      minimumRate: "0.003",
-      maximumRate: "0.1399",
     };
-    const expectedIndexer = ["0.30", "3.00", "7.00", "7.50", "13.50", "13.99"];
-    const expectedCustomers = ["0.00", "0.02", "0.03", "2.50", "7.45", "0.00"];
-    const resultIndexer = wrapper.vm.getParticipantChartData(
-      interestRate,
-      "indexer"
-    );
-    const resultCustomers = wrapper.vm.getParticipantChartData(
-      interestRate,
-      "customers"
-    );
 
-    for (let i = 0; i < expectedIndexer.length; i++) {
-      expect(resultIndexer[i]).toBe(expectedIndexer[i]);
-    }
-    for (let i = 0; i < expectedCustomers.length; i++) {
-      expect(resultCustomers[i]).toBe(expectedCustomers[i]);
-    }
+    expect(wrapper.vm.generateTdData(interestRate, "minimum")).toBe("0.50%");
+    expect(wrapper.vm.generateTdData(interestRate, "maximum")).toBe("5.00%");
+    expect(wrapper.vm.generateTdData(interestRate, "indexerRate")).toBe(
+      "100.00%"
+    );
+    expect(wrapper.vm.generateTdData(interestRate, "indexerType")).toBe(
+      "FLUTUANTES_CDI"
+    );
+    expect(wrapper.vm.generateTdData(interestRate, "indexer-1")).toBe("1.00%");
+    expect(wrapper.vm.generateTdData(interestRate, "customers-1")).toBe(
+      "1.10%"
+    );
+    expect(wrapper.vm.generateTdData(interestRate, "indexer-2")).toBe("2.00%");
+    expect(wrapper.vm.generateTdData(interestRate, "customers-2")).toBe(
+      "2.20%"
+    );
+    expect(wrapper.vm.generateTdData(interestRate, "indexer-3")).toBe("3.00%");
+    expect(wrapper.vm.generateTdData(interestRate, "customers-3")).toBe(
+      "3.30%"
+    );
+    expect(wrapper.vm.generateTdData(interestRate, "indexer-4")).toBe("4.00%");
+    expect(wrapper.vm.generateTdData(interestRate, "customers-4")).toBe(
+      "4.40%"
+    );
   });
 });

@@ -8,5 +8,7 @@ export function isInvalidOrEmpty(obj) {
 }
 
 export function multiplyByIfNumber(number, multiplier) {
-  return Number.isNaN(Number(number)) ? "NA" : (number * multiplier).toFixed(2);
+  return number === null || Number.isNaN(Number(number))
+    ? "NA"
+    : (number * multiplier).toFixed(2);
 }

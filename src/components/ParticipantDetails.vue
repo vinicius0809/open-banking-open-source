@@ -4,7 +4,7 @@
       <h1>{{ participant.RegisteredName }}</h1>
       <div class="title"><strong>Id: </strong>{{ participantId }}</div>
       <hr />
-      <strong> Authorization Servers:</strong>
+      <strong> Empresas:</strong>
       <div class="authorization-servers">
         <AuthorizationServer
           v-for="authorizationServer in participant.AuthorisationServers"

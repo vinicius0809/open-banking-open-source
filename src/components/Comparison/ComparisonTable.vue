@@ -1,53 +1,72 @@
 <template>
   <div class="main">
-      <table class="table-data">
-        <tr>
-          <th colspan="13">Crédito: {{ this.creditType }}</th>
-        </tr>
-        <tr>
-          <th rowspan="2">Empresa</th>
-          <th rowspan="2">Indexador</th>
-          <th rowspan="2">Rate</th>
-          <th rowspan="2">Mínimo</th>
-          <th colspan="2">Faixa 1</th>
-          <th colspan="2">Faixa 2</th>
-          <th colspan="2">Faixa 3</th>
-          <th colspan="2">Faixa 4</th>
-          <th rowspan="2">Máximo</th>
-        </tr>
-        <tr>
-          <th v-for="i in 8" :key="i">
-            {{ returnThInterestOrClientRate(i) }}
-          </th>
-        </tr>
-        <template v-for="participant in participants">
-          <tr :key="participant.participantId">
-            <td
-              :rowspan="
-                participantCreditData(participant).interestRates.length + 1
-              "
-            >
-              <strong>
-                {{ participantCreditData(participant).companyName }}
-              </strong>
-            </td>
-          </tr>
-          <tr
-            v-for="interestRate in participantCreditData(participant)
-              .interestRates"
-            :key="interestRate.companyName"
+    <table class="table-data">
+      <caption>
+        Dados de comparação de dados para o tipo de crédito
+        {{
+          this.creditType
+        }}
+      </caption>
+      <tr>
+        <th colspan="13" scope="colgroup">Crédito: {{ this.creditType }}</th>
+      </tr>
+      <tr>
+        <th rowspan="2" scope="col">Empresa</th>
+        <th rowspan="2" scope="col">Indexador</th>
+        <th rowspan="2" scope="col">Taxa</th>
+        <th rowspan="2" scope="col">Mínimo</th>
+        <th colspan="2" scope="col">Faixa 1</th>
+        <th colspan="2" scope="col">Faixa 2</th>
+        <th colspan="2" scope="col">Faixa 3</th>
+        <th colspan="2" scope="col">Faixa 4</th>
+        <th rowspan="2" scope="col">Máximo</th>
+      </tr>
+      <tr>
+        <th scope="colgroup" v-for="i in 8" :key="i">
+          {{ returnThInterestOrClientRate(i) }}
+        </th>
+      </tr>
+      <template v-for="participant in participants">
+        <tr :key="participant.participantId">
+          <td
+            :rowspan="
+              participantCreditData(
+                participant,
+                this.participants,
+                this.creditType
+              ).interestRates.length + 1
+            "
           >
-            <td v-for="str in stringsToFillTable" :key="str">
-              {{ generateTdData(interestRate, str) }}
-            </td>
-          </tr>
-        </template>
-      </table>
+            <strong>
+              {{
+                participantCreditData(
+                  participant,
+                  this.participants,
+                  this.creditType
+                ).companyName
+              }}
+            </strong>
+          </td>
+        </tr>
+        <tr
+          v-for="interestRate in participantCreditData(
+            participant,
+            this.participants,
+            this.creditType
+          ).interestRates"
+          :key="interestRate.companyName"
+        >
+          <td v-for="str in stringsToFillTable" :key="str">
+            {{ generateTdData(interestRate, str) }}
+          </td>
+        </tr>
+      </template>
+    </table>
   </div>
 </template>
 
 <script>
-import {multiplyByIfNumber} from "../../methods/utils";
+import { multiplyByIfNumber } from "../../methods/utils";
 
 export default {
   name: "ComparisonTable",
@@ -80,15 +99,15 @@ export default {
     };
   },
   methods: {
-    returnThInterestOrClientRate(i){
-      return (i % 2 === 0) ? "% Clientes" : "Juros";
+    returnThInterestOrClientRate(i) {
+      return i % 2 === 0 ? "% Clientes" : "Juros";
     },
-    participantCreditData(participant) {
-      const participantLocal = this.participants.find(
+    participantCreditData(participant, participants, creditType) {
+      const participantLocal = participants.find(
         (x) => x.participantId === participant.participantId
       );
       return participantLocal.participantCreditData.find(
-        (x) => x.type === this.creditType
+        (x) => x.type === creditType
       );
     },
     generateTdData(interestRate, typeData) {
