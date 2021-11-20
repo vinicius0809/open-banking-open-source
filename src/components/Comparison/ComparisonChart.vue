@@ -127,7 +127,7 @@ export default {
         borderWidth: 3,
         type: "bar",
         order: 2,
-        yAxisId: "customers",
+        yAxisID: "customers",
       };
     },
     getDataSetInterest(label, interestRate, companyColors) {
@@ -139,7 +139,7 @@ export default {
         borderWidth: 3,
         type: "line",
         order: 1,
-        yAxisId: "interest",
+        yAxisID: "interest",
         lineTension: 0,
       };
     },

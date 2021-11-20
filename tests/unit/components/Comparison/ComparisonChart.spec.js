@@ -225,7 +225,7 @@ describe("ComparisonChart.vue", () => {
     expect(result.label).toBe(label);
     expect(result.type).toBe("bar");
     expect(result.order).toBe(2);
-    expect(result.yAxisId).toBe("customers");
+    expect(result.yAxisID).toBe("customers");
     expect(result.backgroundColor).toBe("blue");
     expect(result.borderColor).toBe(undefined);
   });
@@ -269,7 +269,7 @@ describe("ComparisonChart.vue", () => {
     expect(result.label).toBe(label);
     expect(result.type).toBe("line");
     expect(result.order).toBe(1);
-    expect(result.yAxisId).toBe("interest");
+    expect(result.yAxisID).toBe("interest");
     expect(result.backgroundColor).toBe("blue");
     expect(result.borderColor).toBe("red");
   });

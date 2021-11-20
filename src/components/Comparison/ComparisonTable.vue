@@ -30,20 +30,14 @@
         <tr :key="participant.participantId">
           <td
             :rowspan="
-              participantCreditData(
-                participant,
-                this.participants,
-                this.creditType
-              ).interestRates.length + 1
+              participantCreditData(participant, participants, creditType)
+                .interestRates.length + 1
             "
           >
             <strong>
               {{
-                participantCreditData(
-                  participant,
-                  this.participants,
-                  this.creditType
-                ).companyName
+                participantCreditData(participant, participants, creditType)
+                  .companyName
               }}
             </strong>
           </td>
@@ -51,8 +45,8 @@
         <tr
           v-for="interestRate in participantCreditData(
             participant,
-            this.participants,
-            this.creditType
+            participants,
+            creditType
           ).interestRates"
           :key="interestRate.companyName"
         >
