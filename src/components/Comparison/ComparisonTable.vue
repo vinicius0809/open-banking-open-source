@@ -2,7 +2,7 @@
   <div class="main">
     <table class="table-data">
       <caption>
-        Dados de comparação de dados para o tipo de crédito
+        Comparação de dados para o tipo de crédito
         {{
           this.creditType
         }}
