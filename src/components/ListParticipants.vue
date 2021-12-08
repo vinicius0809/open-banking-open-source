@@ -2,12 +2,12 @@
   <div class="home">
     <div class="filter">
       <label for="filter">Filtrar por nome: </label>
-      <input id="filter" v-model="filter" type="text" />
+      <input id="filter" v-model="filter" type="text" :disabled="loading" />
     </div>
     <div class="participants">
       <Participant
         v-for="participant in participantsFiltered"
-        :key="participant.RegistrationId"
+        :key="participant.OrganisationId"
         :authorizationServers="participant.AuthorisationServers"
         :companyName="participant.RegisteredName"
         @click.native="participantDetails(participant)"
@@ -19,7 +19,6 @@
 <script>
 import Participant from "@/components/Participant.vue";
 import { mapActions, mapState } from "vuex";
-import { getParticipants } from "../methods/participants.js";
 
 export default {
   name: "ListParticipants",
@@ -32,28 +31,20 @@ export default {
     };
   },
   computed: {
-    ...mapState(["participants"]),
+    ...mapState(["participants", "loading"]),
     participantsFiltered() {
       let result = this.participants;
       if (this.filter !== "") {
-        result = result.filter(
-          (i) =>
+        result = result.filter((i) => {
+          return (
             i.RegisteredName.toLowerCase()
               .normalize("NFD")
               .indexOf(this.filter.toLowerCase().normalize("NFD")) > -1
-        );
+          );
+        });
       }
       return result;
     },
-  },
-  created() {
-    if (
-      this.participants == null ||
-      this.participants === "undefined" ||
-      this.participants.length === 0
-    ) {
-      getParticipants();
-    }
   },
   methods: {
     ...mapActions(["startLoading", "stopLoading", "setParticipants"]),
@@ -69,8 +60,6 @@ export default {
   },
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 h3 {
   margin: 40px 0 0;

@@ -5,7 +5,7 @@
     </div>
     <hr />
     <div class="authorization-servers-count">
-      Authorization Servers: {{ authorizationServers.length}}
+      Empresas: {{ authorizationServers.length}}
     </div>
   </div>
 </template>
@@ -15,10 +15,7 @@ export default {
   props: {
     companyName: String,
     authorizationServers: Array,
-  },
-  data() {
-    return {};
-  },
+  }
 };
 </script>
 
@@ -35,7 +32,6 @@ export default {
     cursor: pointer;
     background-color: darkgray;
 }
-
 .title{
   text-align: center;
 }

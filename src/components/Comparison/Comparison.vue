@@ -52,7 +52,6 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
-import { getParticipants } from "../../methods/participants";
 import { getUrlData } from "../../methods/firebaseFunctions";
 import ComparisonViewer from "./ComparisonViewer";
 
@@ -76,7 +75,8 @@ export default {
       return this.participantsLocal.filter((x) => x.toCompare);
     },
     participantsWithoutSubCompanies() {
-      return this.participants.filter(
+      return this.participants
+          .filter(
         (x) => x.ParentOrganisationReference === ""
       );
     },
@@ -109,15 +109,6 @@ export default {
       });
       return filteredParticipants;
     },
-  },
-  created() {
-    if (
-      this.participants == null ||
-      this.participants === "undefined" ||
-      this.participants.length === 0
-    ) {
-      getParticipants();
-    }
   },
   methods: {
     updateFilteredParticipants(participant, endpoint, filteredParticipants) {

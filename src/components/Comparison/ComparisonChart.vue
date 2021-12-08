@@ -7,64 +7,44 @@
 
 <script>
 import { Chart, registerables } from "chart.js";
-
-Chart.register(...registerables);
+import { mapState } from "vuex";
+import { multiplyByIfNumber } from "../../methods/utils";
 
 export default {
   name: "ComparisonChart",
   props: {
     participants: Array,
     creditType: String,
-    colorMap: Array,
   },
   mounted() {
-    const ctx = document.getElementById(this.creditType);
-    console.log(new Chart(ctx, this.getCreditTypeData));
+    this.createChart();
   },
   computed: {
+    ...mapState(["colorMap"]),
     getChartDataSets() {
       const localParticipants = this.participants;
       let dataSets = [];
       localParticipants.forEach((participant) => {
-        const participantData = this.participantCreditData(participant);
+        const participantData = this.participantCreditData(
+          participant,
+          this.participants,
+          this.creditType
+        );
         let count = 1;
         participantData.interestRates.forEach((interestRate) => {
-          const nameAndIndexerType =
-            participantData.companyName + this.getIndexerText(interestRate);
-
-          let label = nameAndIndexerType + " - % Clientes";
-          let companyColors = this.companyColors(
-            participantData.companyName,
-            count++
+          dataSets = this.fillDataSets(
+            dataSets,
+            participantData,
+            interestRate,
+            count++,
+            this.colorMap
           );
-          let dataSetCustomers = {
-            label,
-            data: this.getParticipantChartData(interestRate, "customers"),
-            backgroundColor: companyColors.backgroundColor,
-            borderWidth: 3,
-            type: "bar",
-            order: 2,
-            yAxisID: "customers",
-          };
-          label = nameAndIndexerType + " - % Juros mensal";
-          let dataSetInterest = {
-            label,
-            data: this.getParticipantChartData(interestRate, "indexer"),
-            backgroundColor: companyColors.backgroundColor,
-            borderColor: companyColors.borderColor,
-            borderWidth: 3,
-            type: "line",
-            order: 1,
-            yAxisId: "interest",
-            lineTension: 0
-          };
-          dataSets.push(dataSetInterest, dataSetCustomers);
         });
       });
       return dataSets;
     },
     getCreditTypeData() {
-      return {
+      const obj = {
         data: {
           labels: [
             "Mínimo",
@@ -81,15 +61,15 @@ export default {
           lineTension: 1,
           scales: {
             interest: {
-              type:"linear",
+              type: "linear",
               ticks: {
                 beginAtZero: true,
               },
               position: "left",
-              title:{
+              title: {
                 display: true,
-                text: "% Juros"
-              }
+                text: "% Juros",
+              },
             },
             customers: {
               type: "linear",
@@ -97,19 +77,74 @@ export default {
                 beginAtZero: true,
               },
               position: "right",
-              title:{
+              title: {
                 display: true,
-                text: "% Clientes"
-              }
+                text: "% Clientes",
+              },
             },
           },
         },
       };
+      Chart.register(...registerables);
+      return obj;
     },
   },
   methods: {
+    createChart() {
+      const ctx = document.getElementById(this.creditType);
+      new Chart(ctx, this.getCreditTypeData);
+    },
+    fillDataSets(dataSets, participantData, interestRate, count, colorMap) {
+      const nameAndIndexerType =
+        participantData.companyName + this.getIndexerText(interestRate);
+
+      let label = nameAndIndexerType + " - % Clientes";
+      let companyColors = this.companyColors(
+        participantData.companyName,
+        count,
+        colorMap
+      );
+
+      let dataSetCustomers = this.getDataSetCustomers(
+        label,
+        interestRate,
+        companyColors
+      );
+      label = nameAndIndexerType + " - % Juros mensal";
+      let dataSetInterest = this.getDataSetInterest(
+        label,
+        interestRate,
+        companyColors
+      );
+      dataSets.push(dataSetInterest, dataSetCustomers);
+      return dataSets;
+    },
+    getDataSetCustomers(label, interestRate, companyColors) {
+      return {
+        label,
+        data: this.getParticipantChartData(interestRate, "customers"),
+        backgroundColor: companyColors.backgroundColor,
+        borderWidth: 3,
+        type: "bar",
+        order: 2,
+        yAxisID: "customers",
+      };
+    },
+    getDataSetInterest(label, interestRate, companyColors) {
+      return {
+        label,
+        data: this.getParticipantChartData(interestRate, "indexer"),
+        backgroundColor: companyColors.backgroundColor,
+        borderColor: companyColors.borderColor,
+        borderWidth: 3,
+        type: "line",
+        order: 1,
+        yAxisID: "interest",
+        lineTension: 0,
+      };
+    },
     getIndexerText(interestRate) {
-      const interestRateType = this.multiplyBy(interestRate.rate, 100);
+      const interestRateType = multiplyByIfNumber(interestRate.rate, 100);
       let text = " - " + interestRate.referentialRateIndexer;
       text +=
         interestRateType === "NA"
@@ -119,12 +154,12 @@ export default {
     },
     getParticipantChartData(interestRate, dataType) {
       let result = [];
-      let minimumRate = 0;
-      let maximumRate = 0;
+      let minimumRate = "0.00";
+      let maximumRate = "0.00";
 
       if (dataType === "indexer") {
-        minimumRate = this.multiplyBy(interestRate.minimumRate, 100);
-        maximumRate = this.multiplyBy(interestRate.maximumRate, 100);
+        minimumRate = multiplyByIfNumber(interestRate.minimumRate, 100);
+        maximumRate = multiplyByIfNumber(interestRate.maximumRate, 100);
       }
 
       result.push(minimumRate);
@@ -133,17 +168,25 @@ export default {
         const rate = interestRate.applications.find(
           (x) => x.interval.indexOf(i) > -1
         )[dataType].rate;
-
-        result.push(this.multiplyBy(rate, 100));
+        result.push(multiplyByIfNumber(rate, 100));
       }
 
       result.push(maximumRate);
       return result;
     },
-    companyColors(nameAndIndexerType, length) {
-      let result = this.colorMap.find(
+    companyColors(nameAndIndexerType, length, colorMap) {
+      let index = colorMap.findIndex(
         (x) => x.nameAndIndexerType === nameAndIndexerType
       );
+
+      let result =
+        index > -1
+          ? {
+              nameAndIndexerType: colorMap[index].nameAndIndexerType,
+              backgroundColor: colorMap[index].backgroundColor,
+              borderColor: colorMap[index].borderColor,
+            }
+          : undefined;
 
       if (length > 1) {
         result.backgroundColor =
@@ -157,18 +200,13 @@ export default {
     returnThInterestOrClientRate(i) {
       return i % 2 === 0 ? "% Clientes" : "Juros";
     },
-    participantCreditData(participant) {
-      const participantLocal = this.participants.find(
+    participantCreditData(participant, participants, creditType) {
+      const participantLocal = participants.find(
         (x) => x.participantId === participant.participantId
       );
-      return participantLocal.participantCreditData.find(
-        (x) => x.type === this.creditType
+      return participantLocal?.participantCreditData?.find(
+        (x) => x.type === creditType
       );
-    },
-    multiplyBy(number, multiply) {
-      return Number.isNaN(Number(number))
-        ? "NA"
-        : (number * multiply).toFixed(2);
     },
   },
 };

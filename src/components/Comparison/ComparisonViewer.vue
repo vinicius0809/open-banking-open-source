@@ -10,7 +10,6 @@
       v-else
       :participants="participants"
       :credit-type="creditType"
-      :color-map="colorMap"
     />
   </div>
 </template>
@@ -18,7 +17,6 @@
 <script>
 import ComparisonTable from "./ComparisonTable";
 import ComparisonChart from "./ComparisonChart";
-import {mapState} from "vuex";
 export default {
   name: "ComparisonViewer",
   components: {
@@ -28,70 +26,8 @@ export default {
   props: {
     participants: Array,
     creditType: String,
-    graphView: Boolean,
-  },
-  data() {
-    return {
-      filterCreditType: "",
-      filterPersonType: "both",
-      participantsLocal: [],
-      dataTables: "",
-      creditTypesSelected: [],
-      stringsToFillTable: [
-        "indexerType",
-        "indexerRate",
-        "minimum",
-        "1",
-        "2",
-        "3",
-        "4",
-        "maximum",
-      ]
-    };
-  },
-  computed:{
-    ...mapState(["colorMap"])
-  },
-  methods: {
-    participantCreditData(participant) {
-      const participantLocal = this.participants.find(
-        (x) => x.participantId === participant.participantId
-      );
-      return participantLocal.participantCreditData.find(
-        (x) => x.type === this.creditType
-      );
-    },
-    generateTdData(interestRate, typeData) {
-      let result = "";
-      switch (typeData) {
-        case "minimum":
-          result += this.formatToPercentage(interestRate.minimumRate);
-          break;
-        case "maximum":
-          result += this.formatToPercentage(interestRate.maximumRate);
-          break;
-        case "indexerRate":
-          result += this.formatToPercentage(interestRate.rate);
-          break;
-        case "indexerType":
-          result += interestRate.referentialRateIndexer;
-          break;
-        default:
-          result += this.formatToPercentage(
-            interestRate.applications.find(
-              (x) => x.interval.indexOf(typeData) > -1
-            ).indexer.rate
-          );
-          break;
-      }
-      return result;
-    },
-    formatToPercentage(number) {
-      return Number.isNaN(Number(number))
-        ? "NA"
-        : (number * 100).toFixed(2) + "%";
-    },
-  },
+    graphView: Boolean
+  }
 };
 </script>
 
